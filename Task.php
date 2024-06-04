@@ -12,11 +12,11 @@ use nova\framework\request\RouteObject;
 
 class Task
 {
+    const TIMEOUT = 50;
     public static function register(): void
     {
         include __DIR__."/helper.php";
         EventManager::addListener("onBeforeRoute", function ($event, &$data) {
-            Logger::info("Tasker Register: $event, Route:".Route::$uri);
             if (Route::$uri == "/task/start") {
                 Task::response();
             }
@@ -29,7 +29,6 @@ class Task
 
         $taskObject = new TaskObject();
         $taskObject->timeout = $timeout;
-        $taskObject->state = TaskObject::WAIT;
         $taskObject->function = $function;
         $taskObject->key = $key;
 
@@ -44,17 +43,15 @@ class Task
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, self::TIMEOUT);
+            curl_setopt($ch, CURLOPT_TIMEOUT_MS, self::TIMEOUT);
             curl_setopt($ch, CURLOPT_NOBODY, true);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Token: '.$key,
                 'Connection: Close'
             ]);
             curl_exec($ch);
-            sleep(1);
             curl_close($ch);
         } catch (\Exception $exception) {
            Logger::error("Tasker Error：".$exception->getMessage());
