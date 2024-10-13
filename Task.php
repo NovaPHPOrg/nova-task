@@ -1,18 +1,19 @@
 <?php
 namespace nova\plugin\task;
 use Closure;
+use Exception;
 use nova\framework\App;
 use nova\framework\cache\Cache;
 use nova\framework\event\EventManager;
 use nova\framework\exception\AppExitException;
 use nova\framework\log\Logger;
+use nova\framework\request\Request;
 use nova\framework\request\Response;
 use nova\framework\request\Route;
-use nova\framework\request\RouteObject;
 
 class Task
 {
-    const TIMEOUT = 50;
+    const int TIMEOUT = 50;
     public static function register(): void
     {
         include __DIR__."/helper.php";
@@ -34,7 +35,8 @@ class Task
 
         self::putTask($taskObject);
 
-        $url = Route::$root."/task/start";
+        $req = new Request();
+        $url = $req->getBasicAddress() . "/task/start";
 
         Logger::info("Tasker Start：".$url);
         try {
@@ -47,13 +49,21 @@ class Task
             curl_setopt($ch, CURLOPT_TIMEOUT_MS, self::TIMEOUT);
             curl_setopt($ch, CURLOPT_NOBODY, true);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            $dns = [
+                $req->getDomainNoPort() . ':' . $req->port() . ':' . $req->getServerIp(),
+
+            ];
+            Logger::info("Tasker DNS：" . json_encode($dns));
+            curl_setopt($ch, CURLOPT_RESOLVE, $dns);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Token: '.$key,
                 'Connection: Close'
             ]);
             curl_exec($ch);
+            sleep(1);
+            Logger::info("Tasker Result：" . curl_error($ch));
             curl_close($ch);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
            Logger::error("Tasker Error：".$exception->getMessage());
             return null;
         }
@@ -68,7 +78,7 @@ class Task
             $data = __serialize($task);
             $cache = new Cache();
             $cache->set($task->key, $data,$task->timeout);
-        }catch (\Exception $exception){
+        }catch (Exception $exception){
             Logger::error("Tasker Error：".$exception->getMessage());
         }
     }
@@ -81,7 +91,7 @@ class Task
            $result = $cache->get($key);
            $cache->delete($key);
            return __unserialize($result);
-       }catch (\Exception $exception){
+       }catch (Exception $exception){
            Logger::error("Tasker Error：".$exception->getMessage());
            return null;
        }
