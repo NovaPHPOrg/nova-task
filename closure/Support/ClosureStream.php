@@ -2,7 +2,9 @@
 
 namespace nova\plugin\task\closure\Support;
 
-#[\AllowDynamicProperties]
+use AllowDynamicProperties;
+
+#[AllowDynamicProperties]
 class ClosureStream
 {
     /**

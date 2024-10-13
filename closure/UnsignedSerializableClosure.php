@@ -5,6 +5,7 @@ namespace nova\plugin\task\closure;
 use Closure;
 use nova\plugin\task\closure\Contracts\Serializable;
 use nova\plugin\task\closure\Exceptions\PhpVersionNotSupportedException;
+use const PHP_VERSION_ID;
 
 class UnsignedSerializableClosure
 {
@@ -18,12 +19,12 @@ class UnsignedSerializableClosure
     /**
      * Creates a new serializable closure instance.
      *
-     * @param  \Closure  $closure
+     * @param Closure $closure
      * @return void
      */
     public function __construct(Closure $closure)
     {
-        if (\PHP_VERSION_ID < 70400) {
+        if (PHP_VERSION_ID < 70400) {
             throw new PhpVersionNotSupportedException();
         }
 
@@ -37,7 +38,7 @@ class UnsignedSerializableClosure
      */
     public function __invoke()
     {
-        if (\PHP_VERSION_ID < 70400) {
+        if (PHP_VERSION_ID < 70400) {
             throw new PhpVersionNotSupportedException();
         }
 
@@ -47,11 +48,11 @@ class UnsignedSerializableClosure
     /**
      * Gets the closure.
      *
-     * @return \Closure
+     * @return Closure
      */
     public function getClosure()
     {
-        if (\PHP_VERSION_ID < 70400) {
+        if (PHP_VERSION_ID < 70400) {
             throw new PhpVersionNotSupportedException();
         }
 

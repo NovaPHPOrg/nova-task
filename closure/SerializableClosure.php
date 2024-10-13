@@ -8,6 +8,7 @@ use nova\plugin\task\closure\Exceptions\InvalidSignatureException;
 use nova\plugin\task\closure\Exceptions\PhpVersionNotSupportedException;
 use nova\plugin\task\closure\Serializers\Signed;
 use nova\plugin\task\closure\Signers\Hmac;
+use const PHP_VERSION_ID;
 
 class SerializableClosure
 {
@@ -21,12 +22,12 @@ class SerializableClosure
     /**
      * Creates a new serializable closure instance.
      *
-     * @param  \Closure  $closure
+     * @param Closure $closure
      * @return void
      */
     public function __construct(Closure $closure)
     {
-        if (\PHP_VERSION_ID < 70400) {
+        if (PHP_VERSION_ID < 70400) {
             throw new PhpVersionNotSupportedException();
         }
 
@@ -42,7 +43,7 @@ class SerializableClosure
      */
     public function __invoke()
     {
-        if (\PHP_VERSION_ID < 70400) {
+        if (PHP_VERSION_ID < 70400) {
             throw new PhpVersionNotSupportedException();
         }
 
@@ -52,11 +53,11 @@ class SerializableClosure
     /**
      * Gets the closure.
      *
-     * @return \Closure
+     * @return Closure
      */
     public function getClosure()
     {
-        if (\PHP_VERSION_ID < 70400) {
+        if (PHP_VERSION_ID < 70400) {
             throw new PhpVersionNotSupportedException();
         }
 
@@ -67,7 +68,7 @@ class SerializableClosure
      * Create a new unsigned serializable closure instance.
      *
      * @param  Closure  $closure
-     * @return \nova\plugin\task\closure\UnsignedSerializableClosure
+     * @return UnsignedSerializableClosure
      */
     public static function unsigned(Closure $closure)
     {
@@ -90,7 +91,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param  \Closure|null  $transformer
+     * @param Closure|null $transformer
      * @return void
      */
     public static function transformUseVariablesUsing($transformer)
@@ -101,7 +102,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param  \Closure|null  $resolver
+     * @param Closure|null $resolver
      * @return void
      */
     public static function resolveUseVariablesUsing($resolver)
@@ -127,7 +128,7 @@ class SerializableClosure
      * @param  array  $data
      * @return void
      *
-     * @throws \nova\plugin\task\closure\Exceptions\InvalidSignatureException
+     * @throws InvalidSignatureException
      */
     public function __unserialize($data)
     {
