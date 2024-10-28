@@ -18,7 +18,7 @@ class Task
     {
         include __DIR__."/helper.php";
         EventManager::addListener("onBeforeRoute", function ($event, &$data) {
-            if (Route::$uri == "/task/start") {
+            if ($data == "/task/start") {
                 Task::response();
             }
         });
