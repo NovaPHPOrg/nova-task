@@ -106,17 +106,16 @@ class Task
         $key = App::getInstance()->getReq()->getHeaderValue("Token") ?? "";
         $task =  self::getTask($key);
         if (empty($task)) {
-            throw new AppExitException(Response::asText("task not found"));
+            throw new AppExitException(Response::asText("task not found"),"Response Task Fail");
         }
 
         $function = $task->function;
         $timeout = $task->timeout ?? 60;
-
         set_time_limit($timeout);
         if (!empty($function) && $function instanceof Closure) {
             $function();
         }
-        throw new AppExitException(Response::asText("task success"));
+        throw new AppExitException(Response::asText("task success"),"Response Task Success");
     }
 
     public static function noWait(int $time = 0): void
