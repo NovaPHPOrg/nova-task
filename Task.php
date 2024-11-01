@@ -17,7 +17,7 @@ class Task
     public static function register(): void
     {
         include __DIR__."/helper.php";
-        EventManager::addListener("onBeforeRoute", function ($event, &$data) {
+        EventManager::addListener("route.before", function ($event, &$data) {
             if ($data == "/task/start") {
                 Task::response();
             }
