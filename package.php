@@ -3,5 +3,9 @@
 use nova\plugin\task\Task;
 
 return [
-    "register" => Task::class,
+    "config"=>[
+        "framework.start"=>[
+            Task::class
+        ]
+    ]
 ];
