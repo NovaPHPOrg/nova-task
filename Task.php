@@ -59,7 +59,6 @@ class Task
 
             $dns = [
                 $req->getDomainNoPort() . ':' . $req->port() . ':' . $req->getServerIp(),
-
             ];
             Logger::info("Tasker DNS：" . json_encode($dns));
             curl_setopt($ch, CURLOPT_RESOLVE, $dns);
