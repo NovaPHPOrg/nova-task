@@ -77,4 +77,10 @@ function go(Closure $function, int $timeout = 300): ?TaskObject
     return Task::start($function, $timeout);
 }
 
-
+function go_wait(?TaskObject $taskObj)
+{
+    if ($taskObj === null) {
+        return;
+    }
+    Task::wait($taskObj);
+}

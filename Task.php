@@ -13,9 +13,12 @@ use nova\framework\request\Route;
 
 class Task
 {
-    const int TIMEOUT = 50;
+    const int TIMEOUT = 300;
     public static function register(): void
     {
+        if (function_exists("nova\\plugin\\task\\go")) {
+           return;
+        }
         include __DIR__."/helper.php";
         EventManager::addListener("route.before", function ($event, &$data) {
             if ($data == "/task/start") {
@@ -27,7 +30,7 @@ class Task
     public static function start(Closure $function, int $timeout = 300): ?TaskObject
     {
         $key = uniqid("task_");
-
+        Logger::info("Tasker Key：".$key." Timeout：".$timeout);
         $taskObject = new TaskObject();
         $taskObject->timeout = $timeout;
         $taskObject->function = $function;
@@ -49,6 +52,7 @@ class Task
             curl_setopt($ch, CURLOPT_TIMEOUT_MS, self::TIMEOUT);
             curl_setopt($ch, CURLOPT_NOBODY, true);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+
             $dns = [
                 $req->getDomainNoPort() . ':' . $req->port() . ':' . $req->getServerIp(),
 
@@ -61,7 +65,9 @@ class Task
             ]);
             curl_exec($ch);
             sleep(1);
-            Logger::info("Tasker Result：" . curl_error($ch));
+            // 获取curl响应码
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            Logger::info("Tasker Result $httpCode ：" . curl_error($ch));
             curl_close($ch);
         } catch (Exception $exception) {
            Logger::error("Tasker Error：".$exception->getMessage());
@@ -89,7 +95,6 @@ class Task
        try{
            $cache = new Cache();
            $result = $cache->get($key);
-           $cache->delete($key);
            return __unserialize($result);
        }catch (Exception $exception){
            Logger::error("Tasker Error：".$exception->getMessage());
@@ -104,17 +109,22 @@ class Task
     {
         self::noWait();
         $key = App::getInstance()->getReq()->getHeaderValue("Token") ?? "";
+        Logger::info("Tasker Key：".$key);
         $task =  self::getTask($key);
+
         if (empty($task)) {
             throw new AppExitException(Response::asText("task not found"),"Response Task Fail");
         }
 
         $function = $task->function;
         $timeout = $task->timeout ?? 60;
+        Logger::info("Response Tasker Key：".$key." Timeout：".$timeout);
         set_time_limit($timeout);
         if (!empty($function) && $function instanceof Closure) {
             $function();
         }
+        $cache = new Cache();
+        $cache->delete($key);
         throw new AppExitException(Response::asText("task success"),"Response Task Success");
     }
 
@@ -134,6 +144,23 @@ class Task
             fastcgi_finish_request();
         }
 
+    }
+
+    public static function wait(TaskObject $taskObject): void
+    {
+        $time = 0;
+        $cache = new Cache();
+
+        while (true) {
+            if ($cache->get($taskObject->key) === null) {
+                break;
+            }
+            sleep(1);
+            $time++;
+            if ($time > 60 * 60 * 24) {
+                break;
+            }
+        }
     }
 
 }
