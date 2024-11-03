@@ -27,8 +27,12 @@ class Task
         });
     }
 
-    public static function start(Closure $function, int $timeout = 300): ?TaskObject
+    public static function start(Closure $function, int $timeout = 300,int $tries = 0): ?TaskObject
     {
+        if ($tries > 10){
+            Logger::error("Tasker Error：Tasker Start Fail, tries > 10");
+            return null;
+        }
         $key = uniqid("task_");
         Logger::info("Tasker Key：".$key." Timeout：".$timeout);
         $taskObject = new TaskObject();
@@ -69,9 +73,13 @@ class Task
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             Logger::info("Tasker Result $httpCode ：" . curl_error($ch));
             curl_close($ch);
+            if ($httpCode !== 200) {
+                return self::start($function,$timeout,$tries+1);
+            }
         } catch (Exception $exception) {
            Logger::error("Tasker Error：".$exception->getMessage());
-            return null;
+            return self::start($function,$timeout,$tries+1);
+
         }
 
 
