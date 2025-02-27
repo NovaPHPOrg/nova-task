@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
  * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
@@ -17,7 +20,7 @@ class ClosureStream
     /**
      * The stream protocol.
      */
-    const STREAM_PROTO = 'laravel-serializable-closure';
+    public const STREAM_PROTO = 'laravel-serializable-closure';
 
     /**
      * Checks if this stream is registered.
@@ -50,10 +53,10 @@ class ClosureStream
     /**
      * Opens file or URL.
      *
-     * @param  string  $path
-     * @param  string  $mode
-     * @param  string  $options
-     * @param  string|null  $opened_path
+     * @param  string      $path
+     * @param  string      $mode
+     * @param  string      $options
+     * @param  string|null $opened_path
      * @return bool
      */
     public function stream_open($path, $mode, $options, &$opened_path)
@@ -67,7 +70,7 @@ class ClosureStream
     /**
      * Read from stream.
      *
-     * @param  int  $count
+     * @param  int    $count
      * @return string
      */
     public function stream_read($count)
@@ -119,8 +122,8 @@ class ClosureStream
     /**
      * Retrieve information about a file.
      *
-     * @param  string  $path
-     * @param  int  $flags
+     * @param  string     $path
+     * @param  int        $flags
      * @return array|bool
      */
     public function url_stat($path, $flags)

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
  * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
@@ -8,10 +11,10 @@
  */
 
 namespace nova\plugin\task;
+
 class TaskObject
 {
-
     public string $key = "";
     public int $timeout = 0;//超时时间
-    public  $function ;
+    public $function ;
 }

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
  * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
@@ -14,7 +17,7 @@ interface Signer
     /**
      * Sign the given serializable.
      *
-     * @param  string  $serializable
+     * @param  string $serializable
      * @return array
      */
     public function sign($serializable);
@@ -22,7 +25,7 @@ interface Signer
     /**
      * Verify the given signature.
      *
-     * @param  array  $signature
+     * @param  array $signature
      * @return bool
      */
     public function verify($signature);

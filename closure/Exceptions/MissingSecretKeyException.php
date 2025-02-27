@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
  * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
@@ -16,7 +19,7 @@ class MissingSecretKeyException extends Exception
     /**
      * Create a new exception instance.
      *
-     * @param  string  $message
+     * @param  string $message
      * @return void
      */
     public function __construct($message = 'No serializable closure secret key has been specified.')

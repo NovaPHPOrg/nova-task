@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
  * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
@@ -21,7 +24,7 @@ use nova\framework\request\Response;
 
 class Task
 {
-    const int TIMEOUT = 300;
+    public const int TIMEOUT = 300;
 
     public static function register(): void
     {

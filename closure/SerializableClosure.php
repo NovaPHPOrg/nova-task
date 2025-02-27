@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
  * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
@@ -15,6 +18,7 @@ use nova\plugin\task\closure\Exceptions\InvalidSignatureException;
 use nova\plugin\task\closure\Exceptions\PhpVersionNotSupportedException;
 use nova\plugin\task\closure\Serializers\Signed;
 use nova\plugin\task\closure\Signers\Hmac;
+
 use const PHP_VERSION_ID;
 
 class SerializableClosure
@@ -29,7 +33,7 @@ class SerializableClosure
     /**
      * Creates a new serializable closure instance.
      *
-     * @param Closure $closure
+     * @param  Closure $closure
      * @return void
      */
     public function __construct(Closure $closure)
@@ -74,7 +78,7 @@ class SerializableClosure
     /**
      * Create a new unsigned serializable closure instance.
      *
-     * @param  Closure  $closure
+     * @param  Closure                     $closure
      * @return UnsignedSerializableClosure
      */
     public static function unsigned(Closure $closure)
@@ -85,7 +89,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param  string|null  $secret
+     * @param  string|null $secret
      * @return void
      */
     public static function setSecretKey($secret)
@@ -98,7 +102,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param Closure|null $transformer
+     * @param  Closure|null $transformer
      * @return void
      */
     public static function transformUseVariablesUsing($transformer)
@@ -109,7 +113,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param Closure|null $resolver
+     * @param  Closure|null $resolver
      * @return void
      */
     public static function resolveUseVariablesUsing($resolver)
@@ -132,7 +136,7 @@ class SerializableClosure
     /**
      * Restore the closure after serialization.
      *
-     * @param  array  $data
+     * @param  array $data
      * @return void
      *
      * @throws InvalidSignatureException

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
  * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
@@ -34,7 +37,7 @@ class Signed implements Serializable
     /**
      * Creates a new serializable closure instance.
      *
-     * @param Closure $closure
+     * @param  Closure $closure
      * @return void
      */
     public function __construct($closure)
@@ -81,7 +84,7 @@ class Signed implements Serializable
     /**
      * Restore the closure after serialization.
      *
-     * @param  array  $signature
+     * @param  array $signature
      * @return void
      *
      * @throws InvalidSignatureException

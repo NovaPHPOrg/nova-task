@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
  * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
@@ -15,9 +18,12 @@ defined('T_FN') || define('T_FN', -6);
 defined('T_NULLSAFE_OBJECT_OPERATOR') || define('T_NULLSAFE_OBJECT_OPERATOR', -7);
 
 use Closure;
-use ReflectionFunction;
+
 use const PHP_MAJOR_VERSION;
+
 use const PHP_MINOR_VERSION;
+
+use ReflectionFunction;
 
 class ReflectionClosure extends ReflectionFunction
 {
@@ -39,8 +45,8 @@ class ReflectionClosure extends ReflectionFunction
     /**
      * Creates a new reflection closure instance.
      *
-     * @param Closure $closure
-     * @param  string|null  $code
+     * @param  Closure     $closure
+     * @param  string|null $code
      * @return void
      */
     public function __construct(Closure $closure, $code = null)
@@ -1189,7 +1195,7 @@ class ReflectionClosure extends ReflectionFunction
     /**
      * Parse the given token.
      *
-     * @param  string  $token
+     * @param  string $token
      * @return array
      */
     protected function parseNameQualified($token)

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
  * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
@@ -8,6 +11,7 @@
  */
 
 namespace nova\plugin\task;
+
 //闭包序列化
 use Closure;
 use nova\framework\log\Logger;
@@ -43,7 +47,7 @@ function traversalClosure($array, $callback)
 /**
  * Serialize
  *
- * @param mixed $data
+ * @param  mixed  $data
  * @return string
  */
 function __serialize(mixed $data): string
@@ -62,12 +66,14 @@ function __serialize(mixed $data): string
 /**
  * unSerialize
  *
- * @param string|null $data
+ * @param  string|null $data
  * @return mixed
  */
 function __unserialize(?string $data): mixed
 {
-    if (empty($data)) return null;
+    if (empty($data)) {
+        return null;
+    }
     $result = unserialize($data);
     traversalClosure($result, function (&$item) {
         $item = unserialize($item)->getClosure();
@@ -78,7 +84,7 @@ function __unserialize(?string $data): mixed
 /**
  * 启动一个异步任务
  * @param Closure $function 任务函数
- * @param int $timeout 异步任务的最长运行时间,单位为秒
+ * @param int     $timeout  异步任务的最长运行时间,单位为秒
  */
 function go(Closure $function, int $timeout = 300): ?TaskObject
 {

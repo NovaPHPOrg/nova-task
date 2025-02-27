@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
  * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
@@ -12,6 +15,7 @@ namespace nova\plugin\task\closure;
 use Closure;
 use nova\plugin\task\closure\Contracts\Serializable;
 use nova\plugin\task\closure\Exceptions\PhpVersionNotSupportedException;
+
 use const PHP_VERSION_ID;
 
 class UnsignedSerializableClosure
@@ -26,7 +30,7 @@ class UnsignedSerializableClosure
     /**
      * Creates a new serializable closure instance.
      *
-     * @param Closure $closure
+     * @param  Closure $closure
      * @return void
      */
     public function __construct(Closure $closure)
@@ -81,7 +85,7 @@ class UnsignedSerializableClosure
     /**
      * Restore the closure after serialization.
      *
-     * @param  array  $data
+     * @param  array $data
      * @return void
      */
     public function __unserialize($data)
