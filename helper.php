@@ -14,7 +14,7 @@ namespace nova\plugin\task;
 
 //闭包序列化
 use Closure;
-use nova\framework\log\Logger;
+use nova\framework\core\Logger;
 use nova\plugin\task\closure\Exceptions\PhpVersionNotSupportedException;
 use nova\plugin\task\closure\SerializableClosure;
 

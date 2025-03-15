@@ -14,17 +14,20 @@ namespace nova\plugin\task;
 
 use Closure;
 use Exception;
-use nova\framework\App;
 use nova\framework\cache\Cache;
+use nova\framework\core\Context;
+use nova\framework\core\Logger;
 use nova\framework\event\EventManager;
 use nova\framework\exception\AppExitException;
-use nova\framework\log\Logger;
-use nova\framework\request\Request;
-use nova\framework\request\Response;
+use nova\framework\http\Response;
+
+use function nova\framework\isCli;
+use function nova\framework\isWorkerman;
 
 class Task
 {
-    public const int TIMEOUT = 300;
+    public const int CONNECT_TIMEOUT_MS = 3000;    // 连接超时5秒
+    public const int TOTAL_TIMEOUT_MS = 3000;     // 总超时10秒
 
     public static function register(): void
     {
@@ -32,6 +35,7 @@ class Task
             return;
         }
         include __DIR__ . "/helper.php";
+
         EventManager::addListener("route.before", function ($event, &$data) {
             if ($data == "/task/start") {
                 Task::response();
@@ -45,7 +49,7 @@ class Task
     private static function response(): void
     {
         self::noWait();
-        $key = App::getInstance()->getReq()->getHeaderValue("Token") ?? "";
+        $key = Context::instance()->request()->getHeaderValue("Token") ?? "";
         Logger::info("Tasker Key：" . $key);
         $task = self::getTask($key);
 
@@ -67,9 +71,15 @@ class Task
 
     public static function noWait(int $time = 0): void
     {
+
+        // 传统 PHP-FPM 环境下的处理
         session_write_close();
         ignore_user_abort(true);
         set_time_limit($time);
+        if (isWorkerman()) {
+           // WorkermanApp::instance()->sendResponse();
+            return;
+        }
         ob_end_clean();
         ob_start();
         header("Connection: close");
@@ -80,7 +90,6 @@ class Task
         if (function_exists("fastcgi_finish_request")) {
             fastcgi_finish_request();
         }
-
     }
 
     private static function getTask($key): ?TaskObject
@@ -111,7 +120,7 @@ class Task
         self::putTask($taskObject);
 
         try {
-            if (php_sapi_name() == "cli") {
+            if (isCli()) {
                 // 命令行环境下的任务启动
                 return self::startTaskCli($taskObject);
             } else {
@@ -171,19 +180,20 @@ class Task
 
     private static function startTaskWeb(TaskObject $taskObject): ?TaskObject
     {
-        $req = new Request();
+        $req = Context::instance()->request();
         $url = $req->getBasicAddress() . "/task/start";
 
         Logger::info("Tasker Start：" . $url);
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
+        curl_setopt($ch, CURLOPT_NOBODY, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, self::TIMEOUT);
-        curl_setopt($ch, CURLOPT_TIMEOUT_MS, self::TIMEOUT);
-        curl_setopt($ch, CURLOPT_NOBODY, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, self::CONNECT_TIMEOUT_MS);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, self::TOTAL_TIMEOUT_MS);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
 
         $dns = [
             $req->getDomainNoPort() . ':' . $req->port() . ':' . $req->getServerIp(),
@@ -194,15 +204,18 @@ class Task
             'Token: ' . $taskObject->key,
             'Connection: Close'
         ]);
+        
+        
         curl_exec($ch);
-        sleep(1);
-        // 获取curl响应码
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        Logger::info("Tasker Result $httpCode ：" . curl_error($ch));
-        curl_close($ch);
-        if ($httpCode !== 200) {
-            throw new Exception("Tasker Start Fail");
+        
+        // 等待连接建立
+        $info = curl_getinfo($ch);
+        if ($info['connect_time'] > 0) {
+            usleep(100000); // 等待100ms确保请求发出
         }
+        
+        curl_close($ch);
+        
         return $taskObject;
     }
 
