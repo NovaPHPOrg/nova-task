@@ -77,7 +77,7 @@ class Task
         ignore_user_abort(true);
         set_time_limit($time);
         if (isWorkerman()) {
-           // WorkermanApp::instance()->sendResponse();
+            // WorkermanApp::instance()->sendResponse();
             return;
         }
         ob_end_clean();
@@ -204,18 +204,17 @@ class Task
             'Token: ' . $taskObject->key,
             'Connection: Close'
         ]);
-        
-        
+
         curl_exec($ch);
-        
+
         // 等待连接建立
         $info = curl_getinfo($ch);
         if ($info['connect_time'] > 0) {
             usleep(100000); // 等待100ms确保请求发出
         }
-        
+
         curl_close($ch);
-        
+
         return $taskObject;
     }
 
