@@ -17,6 +17,7 @@ use Exception;
 use nova\framework\cache\Cache;
 use nova\framework\core\Context;
 use nova\framework\core\Logger;
+use nova\framework\core\StaticRegister;
 use nova\framework\event\EventManager;
 use nova\framework\exception\AppExitException;
 use nova\framework\http\Response;
@@ -24,17 +25,14 @@ use nova\framework\http\Response;
 use function nova\framework\isCli;
 use function nova\framework\isWorkerman;
 
-class Task
+class Task extends StaticRegister
 {
     public const int CONNECT_TIMEOUT_MS = 3000;    // 连接超时5秒
     public const int TOTAL_TIMEOUT_MS = 3000;     // 总超时10秒
 
-    public static function register(): void
+    public static function registerInfo(): void
     {
-        if (function_exists("nova\\plugin\\task\\go")) {
-            return;
-        }
-        include __DIR__ . "/helper.php";
+        include_once __DIR__ . "/helper.php";
 
         EventManager::addListener("route.before", function ($event, &$data) {
             if ($data == "/task/start") {
