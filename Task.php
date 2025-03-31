@@ -14,7 +14,6 @@ namespace nova\plugin\task;
 
 use Closure;
 use Exception;
-use nova\framework\cache\Cache;
 use nova\framework\core\Context;
 use nova\framework\core\Logger;
 use nova\framework\core\StaticRegister;
@@ -62,7 +61,7 @@ class Task extends StaticRegister
         if (!empty($function) && $function instanceof Closure) {
             $function();
         }
-        $cache = new Cache();
+        $cache = Context::instance()->cache;
         $cache->delete($key);
         throw new AppExitException(Response::asText("task success"), "Response Task Success");
     }
@@ -93,7 +92,7 @@ class Task extends StaticRegister
     private static function getTask($key): ?TaskObject
     {
         try {
-            $cache = new Cache();
+            $cache = Context::instance()->cache;
             $result = $cache->get($key);
             return __unserialize($result);
         } catch (Exception $exception) {
@@ -136,7 +135,7 @@ class Task extends StaticRegister
     {
         try {
             $data = __serialize($task);
-            $cache = new Cache();
+            $cache = Context::instance()->cache;
             $cache->set($task->key, $data, $task->timeout);
         } catch (Exception $exception) {
             Logger::error("Tasker Error：" . $exception->getMessage());
@@ -171,7 +170,7 @@ class Task extends StaticRegister
 
     private static function cleanupTask($key): void
     {
-        $cache = new Cache();
+        $cache = Context::instance()->cache;
         $cache->delete($key);
         Logger::info("Tasker Cleanup：Task with key $key has been cleaned up");
     }
@@ -219,7 +218,7 @@ class Task extends StaticRegister
     public static function wait(TaskObject $taskObject): void
     {
         $time = 0;
-        $cache = new Cache();
+        $cache = Context::instance()->cache;
 
         while (true) {
             if ($cache->get($taskObject->key) === null) {
