@@ -46,7 +46,6 @@ class Task extends StaticRegister
                 ) {
                     return;
                 }
-                \nova\plugin\cookie\Session::getInstance()->start();
                 if (\nova\plugin\login\LoginManager::getInstance()->checkLogin()) {
                     $tasks = TaskerManager::list();
                     throw new AppExitException(Response::asJson([
