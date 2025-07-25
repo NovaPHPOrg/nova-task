@@ -14,7 +14,6 @@ namespace nova\plugin\task;
 
 use Closure;
 use Exception;
-use \RuntimeException;
 use nova\framework\core\Context;
 use nova\framework\core\Logger;
 use nova\framework\core\StaticRegister;
@@ -22,11 +21,13 @@ use nova\framework\event\EventManager;
 use nova\framework\exception\AppExitException;
 use nova\framework\http\Response;
 
-use function nova\framework\dump;
 use function nova\framework\isCli;
+
 use function nova\framework\isWorkerman;
 
 use nova\plugin\corn\schedule\TaskerManager;
+
+use RuntimeException;
 
 class Task extends StaticRegister
 {
@@ -146,7 +147,7 @@ class Task extends StaticRegister
                 return self::startTaskWeb($taskObject);
             }
         } catch (Exception $exception) {
-            if($exception instanceof AppExitException){
+            if ($exception instanceof AppExitException) {
                 throw $exception;
             }
             Logger::error("Tasker Error：" . $exception->getMessage());
@@ -227,13 +228,11 @@ class Task extends StaticRegister
             'Connection: Close'
         ]);
 
-
-
-        if(!curl_exec($ch)){
+        if (!curl_exec($ch)) {
             //输出错误信息
-            Logger::error("Tasker start error" .'cURL error #' . curl_errno($ch) . ': ' . curl_error($ch) );
+            Logger::error("Tasker start error" .'cURL error #' . curl_errno($ch) . ': ' . curl_error($ch));
             throw new RuntimeException(curl_error($ch));
-        }else{
+        } else {
             // 等待连接建立
             $info = curl_getinfo($ch);
             if ($info['connect_time'] > 0) {
@@ -241,7 +240,6 @@ class Task extends StaticRegister
             }
             curl_close($ch);
         }
-
 
         return $taskObject;
     }
