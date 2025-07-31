@@ -1,15 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
-/*
- * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
- * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
- * Etiam sed turpis ac ipsum condimentum fringilla. Maecenas magna.
- * Proin dapibus sapien vel ante. Aliquam erat volutpat. Pellentesque sagittis ligula eget metus.
- * Vestibulum commodo. Ut rhoncus gravida arcu.
- */
-
 namespace nova\plugin\task\closure\Serializers;
 
 use Closure;
@@ -22,7 +12,7 @@ use nova\plugin\task\closure\Support\ReflectionClosure;
 use nova\plugin\task\closure\Support\SelfReference;
 use nova\plugin\task\closure\UnsignedSerializableClosure;
 use ReflectionObject;
-use stdClass;
+use ReflectionProperty;
 use UnitEnum;
 
 class Native implements Serializable
@@ -30,28 +20,28 @@ class Native implements Serializable
     /**
      * Transform the use variables before serialization.
      *
-     * @var Closure|null
+     * @var \Closure|null
      */
     public static $transformUseVariables;
 
     /**
      * Resolve the use variables after unserialization.
      *
-     * @var Closure|null
+     * @var \Closure|null
      */
     public static $resolveUseVariables;
 
     /**
      * The closure to be serialized/unserialized.
      *
-     * @var Closure
+     * @var \Closure
      */
     protected $closure;
 
     /**
      * The closure's reflection.
      *
-     * @var ReflectionClosure|null
+     * @var \nova\plugin\task\closure\Support\ReflectionClosure|null
      */
     protected $reflector;
 
@@ -72,19 +62,19 @@ class Native implements Serializable
     /**
      * The closure's scope.
      *
-     * @var ClosureScope|null
+     * @var \nova\plugin\task\closure\Support\ClosureScope|null
      */
     protected $scope;
 
     /**
      * The "key" that marks an array as recursive.
      */
-    public const ARRAY_RECURSIVE_KEY = 'LARAVEL_SERIALIZABLE_RECURSIVE_KEY';
+    const ARRAY_RECURSIVE_KEY = 'LARAVEL_SERIALIZABLE_RECURSIVE_KEY';
 
     /**
      * Creates a new serializable closure instance.
      *
-     * @param  Closure $closure
+     * @param  \Closure  $closure
      * @return void
      */
     public function __construct(Closure $closure)
@@ -105,7 +95,7 @@ class Native implements Serializable
     /**
      * Gets the closure.
      *
-     * @return Closure
+     * @return \Closure
      */
     public function getClosure()
     {
@@ -171,7 +161,7 @@ class Native implements Serializable
     /**
      * Restore the closure after serialization.
      *
-     * @param  array $data
+     * @param  array  $data
      * @return void
      */
     public function __unserialize($data)
@@ -217,8 +207,8 @@ class Native implements Serializable
     /**
      * Ensures the given closures are serializable.
      *
-     * @param  mixed        $data
-     * @param  ClosureScope $storage
+     * @param  mixed  $data
+     * @param  \nova\plugin\task\closure\Support\ClosureScope  $storage
      * @return void
      */
     public static function wrapClosures(&$data, $storage)
@@ -241,7 +231,7 @@ class Native implements Serializable
 
             unset($value);
             unset($data[self::ARRAY_RECURSIVE_KEY]);
-        } elseif ($data instanceof stdClass) {
+        } elseif ($data instanceof \stdClass) {
             if (isset($storage[$data])) {
                 $data = $storage[$data];
 
@@ -285,7 +275,7 @@ class Native implements Serializable
 
                     $property->setAccessible(true);
 
-                    if (PHP_VERSION >= 7.4 && ! $property->isInitialized($instance)) {
+                    if (! $property->isInitialized($instance)) {
                         continue;
                     }
 
@@ -304,7 +294,7 @@ class Native implements Serializable
     /**
      * Gets the closure's reflector.
      *
-     * @return ReflectionClosure
+     * @return \nova\plugin\task\closure\Support\ReflectionClosure
      */
     public function getReflector()
     {
@@ -319,7 +309,7 @@ class Native implements Serializable
     /**
      * Internal method used to map closure pointers.
      *
-     * @param  mixed $data
+     * @param  mixed  $data
      * @return void
      */
     protected function mapPointers(&$data)
@@ -349,7 +339,7 @@ class Native implements Serializable
 
             unset($value);
             unset($data[self::ARRAY_RECURSIVE_KEY]);
-        } elseif ($data instanceof stdClass) {
+        } elseif ($data instanceof \stdClass) {
             if (isset($scope[$data])) {
                 return;
             }
@@ -385,7 +375,7 @@ class Native implements Serializable
 
                     $property->setAccessible(true);
 
-                    if (PHP_VERSION >= 7.4 && ! $property->isInitialized($data)) {
+                    if (! $property->isInitialized($data) || $property->isReadOnly()) {
                         continue;
                     }
 
@@ -409,7 +399,7 @@ class Native implements Serializable
     /**
      * Internal method used to map closures by reference.
      *
-     * @param  mixed $data
+     * @param  mixed  $data
      * @return void
      */
     protected function mapByReference(&$data)
@@ -449,7 +439,7 @@ class Native implements Serializable
 
             unset($value);
             unset($data[self::ARRAY_RECURSIVE_KEY]);
-        } elseif ($data instanceof stdClass) {
+        } elseif ($data instanceof \stdClass) {
             if (isset($this->scope[$data])) {
                 $data = $this->scope[$data];
 
@@ -501,13 +491,13 @@ class Native implements Serializable
                 }
 
                 foreach ($reflection->getProperties() as $property) {
-                    if ($property->isStatic() || ! $property->getDeclaringClass()->isUserDefined()) {
+                    if ($property->isStatic() || ! $property->getDeclaringClass()->isUserDefined() || $this->isVirtualProperty($property)) {
                         continue;
                     }
 
                     $property->setAccessible(true);
 
-                    if (PHP_VERSION >= 7.4 && ! $property->isInitialized($instance)) {
+                    if (! $property->isInitialized($instance) || ($property->isReadOnly() && $property->class !== $reflection->name)) {
                         continue;
                     }
 
@@ -521,5 +511,16 @@ class Native implements Serializable
                 }
             } while ($reflection = $reflection->getParentClass());
         }
+    }
+
+    /**
+     * Determine is virtual property.
+     *
+     * @param  \ReflectionProperty  $property
+     * @return bool
+     */
+    protected function isVirtualProperty(ReflectionProperty $property): bool
+    {
+        return method_exists($property, 'isVirtual') && $property->isVirtual();
     }
 }

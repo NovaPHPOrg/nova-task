@@ -1,26 +1,16 @@
 <?php
 
-declare(strict_types=1);
-
-/*
- * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
- * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
- * Etiam sed turpis ac ipsum condimentum fringilla. Maecenas magna.
- * Proin dapibus sapien vel ante. Aliquam erat volutpat. Pellentesque sagittis ligula eget metus.
- * Vestibulum commodo. Ut rhoncus gravida arcu.
- */
-
 namespace nova\plugin\task\closure\Support;
 
-use AllowDynamicProperties;
-
-#[AllowDynamicProperties]
+#[\AllowDynamicProperties]
 class ClosureStream
 {
     /**
      * The stream protocol.
+     *
+     * @var string
      */
-    public const STREAM_PROTO = 'laravel-serializable-closure';
+    const STREAM_PROTO = 'laravel-serializable-closure';
 
     /**
      * Checks if this stream is registered.
@@ -53,10 +43,10 @@ class ClosureStream
     /**
      * Opens file or URL.
      *
-     * @param  string      $path
-     * @param  string      $mode
-     * @param  string      $options
-     * @param  string|null $opened_path
+     * @param  string  $path
+     * @param  string  $mode
+     * @param  string  $options
+     * @param  string|null  $opened_path
      * @return bool
      */
     public function stream_open($path, $mode, $options, &$opened_path)
@@ -70,7 +60,7 @@ class ClosureStream
     /**
      * Read from stream.
      *
-     * @param  int    $count
+     * @param  int  $count
      * @return string
      */
     public function stream_read($count)
@@ -122,8 +112,8 @@ class ClosureStream
     /**
      * Retrieve information about a file.
      *
-     * @param  string     $path
-     * @param  int        $flags
+     * @param  string  $path
+     * @param  int  $flags
      * @return array|bool
      */
     public function url_stat($path, $flags)

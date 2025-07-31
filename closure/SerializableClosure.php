@@ -1,47 +1,29 @@
 <?php
 
-declare(strict_types=1);
-
-/*
- * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
- * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
- * Etiam sed turpis ac ipsum condimentum fringilla. Maecenas magna.
- * Proin dapibus sapien vel ante. Aliquam erat volutpat. Pellentesque sagittis ligula eget metus.
- * Vestibulum commodo. Ut rhoncus gravida arcu.
- */
-
 namespace nova\plugin\task\closure;
 
 use Closure;
-use nova\plugin\task\closure\Contracts\Serializable;
 use nova\plugin\task\closure\Exceptions\InvalidSignatureException;
-use nova\plugin\task\closure\Exceptions\PhpVersionNotSupportedException;
 use nova\plugin\task\closure\Serializers\Signed;
 use nova\plugin\task\closure\Signers\Hmac;
-
-use const PHP_VERSION_ID;
 
 class SerializableClosure
 {
     /**
      * The closure's serializable.
      *
-     * @var Serializable
+     * @var \nova\plugin\task\closure\Contracts\Serializable
      */
     protected $serializable;
 
     /**
      * Creates a new serializable closure instance.
      *
-     * @param  Closure $closure
+     * @param  \Closure  $closure
      * @return void
      */
     public function __construct(Closure $closure)
     {
-        if (PHP_VERSION_ID < 70400) {
-            throw new PhpVersionNotSupportedException();
-        }
-
         $this->serializable = Serializers\Signed::$signer
             ? new Serializers\Signed($closure)
             : new Serializers\Native($closure);
@@ -54,32 +36,24 @@ class SerializableClosure
      */
     public function __invoke()
     {
-        if (PHP_VERSION_ID < 70400) {
-            throw new PhpVersionNotSupportedException();
-        }
-
         return call_user_func_array($this->serializable, func_get_args());
     }
 
     /**
      * Gets the closure.
      *
-     * @return Closure
+     * @return \Closure
      */
     public function getClosure()
     {
-        if (PHP_VERSION_ID < 70400) {
-            throw new PhpVersionNotSupportedException();
-        }
-
         return $this->serializable->getClosure();
     }
 
     /**
      * Create a new unsigned serializable closure instance.
      *
-     * @param  Closure                     $closure
-     * @return UnsignedSerializableClosure
+     * @param  Closure  $closure
+     * @return \nova\plugin\task\closure\UnsignedSerializableClosure
      */
     public static function unsigned(Closure $closure)
     {
@@ -89,7 +63,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param  string|null $secret
+     * @param  string|null  $secret
      * @return void
      */
     public static function setSecretKey($secret)
@@ -102,7 +76,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param  Closure|null $transformer
+     * @param  \Closure|null  $transformer
      * @return void
      */
     public static function transformUseVariablesUsing($transformer)
@@ -113,7 +87,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param  Closure|null $resolver
+     * @param  \Closure|null  $resolver
      * @return void
      */
     public static function resolveUseVariablesUsing($resolver)
@@ -124,7 +98,7 @@ class SerializableClosure
     /**
      * Get the serializable representation of the closure.
      *
-     * @return array
+     * @return array{serializable: \nova\plugin\task\closure\Serializers\Signed|\nova\plugin\task\closure\Contracts\Serializable}
      */
     public function __serialize()
     {
@@ -136,10 +110,10 @@ class SerializableClosure
     /**
      * Restore the closure after serialization.
      *
-     * @param  array $data
+     * @param  array{serializable: \nova\plugin\task\closure\Serializers\Signed|\nova\plugin\task\closure\Contracts\Serializable}  $data
      * @return void
      *
-     * @throws InvalidSignatureException
+     * @throws \nova\plugin\task\closure\Exceptions\InvalidSignatureException
      */
     public function __unserialize($data)
     {

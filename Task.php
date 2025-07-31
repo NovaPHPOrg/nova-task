@@ -117,7 +117,7 @@ class Task extends StaticRegister
             $cache = Context::instance()->cache;
             $result = $cache->get($key);
             return __unserialize($result);
-        } catch (Exception $exception) {
+        } catch (Exception|\Error $exception) {
             Logger::error("Tasker Error：" . $exception->getMessage());
             return null;
         }

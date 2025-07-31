@@ -1,20 +1,8 @@
 <?php
 
-declare(strict_types=1);
-
-/*
- * Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
- * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
- * Etiam sed turpis ac ipsum condimentum fringilla. Maecenas magna.
- * Proin dapibus sapien vel ante. Aliquam erat volutpat. Pellentesque sagittis ligula eget metus.
- * Vestibulum commodo. Ut rhoncus gravida arcu.
- */
-
 namespace nova\plugin\task\closure\Serializers;
 
-use Closure;
 use nova\plugin\task\closure\Contracts\Serializable;
-use nova\plugin\task\closure\Contracts\Signer;
 use nova\plugin\task\closure\Exceptions\InvalidSignatureException;
 use nova\plugin\task\closure\Exceptions\MissingSecretKeyException;
 
@@ -23,21 +11,21 @@ class Signed implements Serializable
     /**
      * The signer that will sign and verify the closure's signature.
      *
-     * @var Signer|null
+     * @var \nova\plugin\task\closure\Contracts\Signer|null
      */
     public static $signer;
 
     /**
      * The closure to be serialized/unserialized.
      *
-     * @var Closure
+     * @var \Closure
      */
     protected $closure;
 
     /**
      * Creates a new serializable closure instance.
      *
-     * @param  Closure $closure
+     * @param  \Closure  $closure
      * @return void
      */
     public function __construct($closure)
@@ -58,7 +46,7 @@ class Signed implements Serializable
     /**
      * Gets the closure.
      *
-     * @return Closure
+     * @return \Closure
      */
     public function getClosure()
     {
@@ -84,10 +72,10 @@ class Signed implements Serializable
     /**
      * Restore the closure after serialization.
      *
-     * @param  array $signature
+     * @param  array{serializable: string, hash: string}  $signature
      * @return void
      *
-     * @throws InvalidSignatureException
+     * @throws \nova\plugin\task\closure\Exceptions\InvalidSignatureException
      */
     public function __unserialize($signature)
     {
@@ -95,7 +83,7 @@ class Signed implements Serializable
             throw new InvalidSignatureException();
         }
 
-        /** @var Serializable $serializable */
+        /** @var \nova\plugin\task\closure\Contracts\Serializable $serializable */
         $serializable = unserialize($signature['serializable']);
 
         $this->closure = $serializable->getClosure();
