@@ -106,47 +106,14 @@ function go_wait(?TaskObject $taskObj)
  *
  * @template T
  * @param array<T> $items 要处理的任务列表
- * @param int $concurrency 并发进程数（>=1）
  * @param int $timeout 超时
  * @param callable $worker 业务处理器：function (T $item, int $index, ...$extra): void
  * @param callable $finish
  */
-function run_pool(array $items, int $concurrency,int $timeout, callable $worker, callable $finish): void
+function run_pool(array $items,int $timeout, callable $worker, callable $finish): void
 {
-    if ($concurrency < 1) {
-        $concurrency = 1;
-    }
-
-    $total      = count($items);
-    if ($total === 0) {
-        return;
-    }
-
-    // 按并发数把任务切块（避免一次起太多 go）
-    $chunkSize  = (int) ceil($total / $concurrency);
-
-    Logger::info("并发任务拆分：分组 $chunkSize / 总计 $total / 进程 $concurrency");
-
-    $processes  = [];
-    $startIndex = 0;
-
-    foreach (array_chunk($items, $chunkSize) as $chunk) {
-        $curStart = $startIndex;          // 捕获起始下标
-        $processes[] = go(function () use ($chunk, $worker, $curStart) {
-            foreach ($chunk as $offset => $item) {
-                // 全局下标 = 块起点 + 块内偏移
-                $worker($item, $curStart + $offset);
-            }
-        },$timeout);
-
-        $startIndex += $chunkSize;
-    }
-
-    // 等所有子任务结束
-    foreach ($processes as $proc) {
-        go_wait($proc);
-    }
-
-    $finish();
+   PoolManager::instance($timeout)->runPool($items,$worker,$finish);
 }
+
+
 
