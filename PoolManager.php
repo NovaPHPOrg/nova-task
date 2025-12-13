@@ -59,8 +59,9 @@ class PoolManager
             try{
                 $item = __unserialize($queue);
 
-                ['items' => $items, 'worker' => $worker, 'finish' => $finish] = array_shift($item);
-                $this->runPool($items, $worker, $finish);
+                ['items' => $items, 'worker' => $worker, 'finish' => $finish] = $item;
+
+            $this->runPool($items, $worker, $finish);
 
             }catch (\Throwable $e){
                 Logger::error($e->getMessage(),$e->getTrace());
@@ -85,9 +86,11 @@ class PoolManager
         $processes  = [];
         $startIndex = 0;
         foreach (array_chunk($items, $chunkSize) as $chunk) {
+            if (Context::instance()->cache->get(self::SERVER_KEY) == null) break;
             $base = $startIndex;
             $processes[] = go(function () use ($chunk, $worker, $base) {
                 foreach ($chunk as $i => $item) {
+                    if (Context::instance()->cache->get(self::SERVER_KEY) == null) break;
                     // 把自己传进去，worker 内可以再 call $mgr->pushStage(...)
                     $worker($item, $base + $i, $this);
                 }

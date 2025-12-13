@@ -175,11 +175,11 @@ class Task extends StaticRegister
             return null;
         } elseif ($pid) {
             // 父进程逻辑
-            Logger::info("Tasker Start：Parent process, PID $pid");
+            Logger::debug("Tasker Start：Parent process, PID $pid");
             return $taskObject;
         } else {
             // 子进程逻辑
-            Logger::info("Tasker Start：Child process, executing task");
+            Logger::debug("Tasker Start：Child process, executing task");
             try {
                 $obj = self::getTask($taskObject->key);
                 $function = $obj->function;
@@ -197,7 +197,7 @@ class Task extends StaticRegister
     {
         $cache = Context::instance()->cache;
         $cache->delete($key);
-        Logger::info("Tasker Cleanup：Task with key $key has been cleaned up");
+        Logger::debug("Tasker Cleanup：Task with key $key has been cleaned up");
     }
 
     private static function startTaskWeb(TaskObject $taskObject): ?TaskObject
@@ -206,7 +206,7 @@ class Task extends StaticRegister
         $req = Context::instance()->request();
         $url = $req->getBasicAddress() . "/task/start";
 
-        Logger::info("Tasker Start：" . $url);
+        Logger::debug("Tasker Start：" . $url);
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
@@ -221,7 +221,7 @@ class Task extends StaticRegister
         $dns = [
             $req->getDomainNoPort() . ':' . $req->port() . ':' . $req->getServerIp(),
         ];
-        Logger::info("Tasker DNS：" . json_encode($dns));
+        Logger::debug("Tasker DNS：" . json_encode($dns));
         curl_setopt($ch, CURLOPT_RESOLVE, $dns);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Token: ' . $taskObject->key,
@@ -236,6 +236,7 @@ class Task extends StaticRegister
             // 等待连接建立
             $info = curl_getinfo($ch);
             if ($info['connect_time'] > 0) {
+                Logger::debug("Tasker Start End：" . $url);
                 usleep(100000); // 等待100ms确保请求发出
             }
             curl_close($ch);
