@@ -14,23 +14,24 @@ class PoolManager
     protected Cache $cache;
     protected string $cacheKey;
 
-    public static function instance($timeout = 24 * 3600,):PoolManager
+    public static function instance($timeout = 24 * 3600): PoolManager
     {
-        return Context::instance()->getOrCreateInstance(PoolManager::class,function ()use ($timeout){
+        return Context::instance()->getOrCreateInstance(PoolManager::class, function () use ($timeout) {
             //子进程数量
-            return new PoolManager((config("cpu_cores")??1)*4,$timeout);
+            return new PoolManager((config("cpu_cores") ?? 1) * 4, $timeout);
         });
     }
 
 
     public function __construct(
-        int $concurrency = 4,
-        int $timeout = 24 * 3600,
+        int    $concurrency = 4,
+        int    $timeout = 24 * 3600,
         string $cacheKey = 'task_pool'
-    ) {
+    )
+    {
         $this->concurrency = max(1, $concurrency);
-        $this->timeout     = $timeout;
-        $this->cacheKey    = $cacheKey;
+        $this->timeout = $timeout;
+        $this->cacheKey = $cacheKey;
     }
 
     /**
@@ -42,48 +43,48 @@ class PoolManager
      */
     public static function pushStage(array $items, callable $worker, callable $finish = null): void
     {
-        Context::instance()->cache->set("pool/task_".uniqid(),__serialize([
-            'items'  => $items,
+        Context::instance()->cache->set("pool/task_" . uniqid(), __serialize([
+            'items' => $items,
             'worker' => $worker,
-            'finish' => $finish ?? function(){},
+            'finish' => $finish ?? function () {
+                },
         ]));
     }
 
     /** 启动执行所有排队的阶段 */
     public function run(): void
     {
+
         $queues = Context::instance()->cache->getAll("pool");
-
         foreach ($queues as $key => $queue) {
-            Context::instance()->cache->set("pool.lock",time(),3600);
-            try{
+            try {
                 $item = __unserialize($queue);
-
                 ['items' => $items, 'worker' => $worker, 'finish' => $finish] = $item;
-
-            $this->runPool($items, $worker, $finish);
-
-            }catch (\Throwable $e){
-                Logger::error($e->getMessage(),$e->getTrace());
+                $this->runPool($items, $worker, $finish);
+            } catch (\Throwable $e) {
+                Logger::error($e->getMessage(), $e->getTrace());
             } finally {
                 Context::instance()->cache->delete($key);
+                Context::instance()->cache->set(self::SERVER_KEY,getmypid(),20);
             }
         }
+
+
     }
 
     /** 内部执行单阶段的并发逻辑 */
     public function runPool(array $items, callable $worker, callable $finish): void
     {
-        $total     = count($items);
+        $total = count($items);
         if ($total === 0) {
             $finish();
             return;
         }
 
-        $chunkSize = (int) ceil($total / $this->concurrency);
+        $chunkSize = (int)ceil($total / $this->concurrency);
         Logger::info("并发任务拆分：分组 $chunkSize / 总任务 $total / 并发 {$this->concurrency}");
 
-        $processes  = [];
+        $processes = [];
         $startIndex = 0;
         foreach (array_chunk($items, $chunkSize) as $chunk) {
             if (Context::instance()->cache->get(self::SERVER_KEY) == null) break;
@@ -123,15 +124,14 @@ class PoolManager
             go(function () {
                 $key = self::SERVER_KEY;
                 $cache = Context::instance()->cache;
-
+                $pid = getmypid();
                 do {
-                    $pid = getmypid();
-                    $cache->set($key, $pid, 55);
+                    $cache->set($key, $pid, 15);
                     PoolManager::instance()->run();
-                    sleep(30);
+                    sleep(10);
                     Logger::info("PoolServer({$pid}) is running in the background");
                 } while ($cache->get($key) === $pid);
-
+                Logger::info("PoolServer({$pid}) is stopped.");
             }, 0);
         }
     }

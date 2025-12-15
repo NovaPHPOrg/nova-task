@@ -21,6 +21,7 @@ use nova\framework\event\EventManager;
 use nova\framework\exception\AppExitException;
 use nova\framework\http\Response;
 
+use nova\plugin\login\LoginManager;
 use function nova\framework\isCli;
 
 use function nova\framework\isWorkerman;
@@ -49,7 +50,7 @@ class Task extends StaticRegister
                 ) {
                     return;
                 }
-                if (\nova\plugin\login\LoginManager::getInstance()->checkLogin()) {
+                if (LoginManager::getInstance()->checkLogin()) {
                     $tasks = TaskerManager::list();
                     throw new AppExitException(Response::asJson([
                         'code' => 200,
