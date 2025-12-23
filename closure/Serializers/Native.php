@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace nova\plugin\task\closure\Serializers;
 
 use Closure;
@@ -74,7 +76,7 @@ class Native implements Serializable
     /**
      * Creates a new serializable closure instance.
      *
-     * @param  \Closure  $closure
+     * @param  \Closure $closure
      * @return void
      */
     public function __construct(Closure $closure)
@@ -161,7 +163,7 @@ class Native implements Serializable
     /**
      * Restore the closure after serialization.
      *
-     * @param  array  $data
+     * @param  array $data
      * @return void
      */
     public function __unserialize($data)
@@ -207,8 +209,8 @@ class Native implements Serializable
     /**
      * Ensures the given closures are serializable.
      *
-     * @param  mixed  $data
-     * @param  \nova\plugin\task\closure\Support\ClosureScope  $storage
+     * @param  mixed                                          $data
+     * @param  \nova\plugin\task\closure\Support\ClosureScope $storage
      * @return void
      */
     public static function wrapClosures(&$data, $storage)
@@ -309,7 +311,7 @@ class Native implements Serializable
     /**
      * Internal method used to map closure pointers.
      *
-     * @param  mixed  $data
+     * @param  mixed $data
      * @return void
      */
     protected function mapPointers(&$data)
@@ -399,7 +401,7 @@ class Native implements Serializable
     /**
      * Internal method used to map closures by reference.
      *
-     * @param  mixed  $data
+     * @param  mixed $data
      * @return void
      */
     protected function mapByReference(&$data)
@@ -516,7 +518,7 @@ class Native implements Serializable
     /**
      * Determine is virtual property.
      *
-     * @param  \ReflectionProperty  $property
+     * @param  \ReflectionProperty $property
      * @return bool
      */
     protected function isVirtualProperty(ReflectionProperty $property): bool

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace nova\plugin\task\closure\Support;
 
 defined('T_NAME_QUALIFIED') || define('T_NAME_QUALIFIED', -4);
@@ -30,8 +32,8 @@ class ReflectionClosure extends ReflectionFunction
     /**
      * Creates a new reflection closure instance.
      *
-     * @param  \Closure  $closure
-     * @param  string|null  $code
+     * @param  \Closure    $closure
+     * @param  string|null $code
      * @return void
      */
     public function __construct(Closure $closure, $code = null)
@@ -1225,7 +1227,7 @@ class ReflectionClosure extends ReflectionFunction
     /**
      * Parse the given token.
      *
-     * @param  string  $token
+     * @param  string $token
      * @return array
      */
     protected function parseNameQualified($token)

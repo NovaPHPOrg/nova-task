@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace nova\plugin\task\closure\Serializers;
 
 use nova\plugin\task\closure\Contracts\Serializable;
@@ -25,7 +27,7 @@ class Signed implements Serializable
     /**
      * Creates a new serializable closure instance.
      *
-     * @param  \Closure  $closure
+     * @param  \Closure $closure
      * @return void
      */
     public function __construct($closure)
@@ -72,7 +74,7 @@ class Signed implements Serializable
     /**
      * Restore the closure after serialization.
      *
-     * @param  array{serializable: string, hash: string}  $signature
+     * @param  array{serializable: string, hash: string} $signature
      * @return void
      *
      * @throws \nova\plugin\task\closure\Exceptions\InvalidSignatureException

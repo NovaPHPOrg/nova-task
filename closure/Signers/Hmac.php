@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace nova\plugin\task\closure\Signers;
 
 use nova\plugin\task\closure\Contracts\Signer;
@@ -16,7 +18,7 @@ class Hmac implements Signer
     /**
      * Creates a new signer instance.
      *
-     * @param  string  $secret
+     * @param  string $secret
      * @return void
      */
     public function __construct($secret)
@@ -27,7 +29,7 @@ class Hmac implements Signer
     /**
      * Sign the given serializable.
      *
-     * @param  string  $serialized
+     * @param  string $serialized
      * @return array
      */
     public function sign($serialized)
@@ -41,7 +43,7 @@ class Hmac implements Signer
     /**
      * Verify the given signature.
      *
-     * @param  array{serializable: string, hash: string}  $signature
+     * @param  array{serializable: string, hash: string} $signature
      * @return bool
      */
     public function verify($signature)

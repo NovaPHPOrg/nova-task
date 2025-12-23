@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace nova\plugin\task;
 
 use nova\framework\cache\Cache;
+
+use function nova\framework\config;
+
 use nova\framework\core\Context;
 use nova\framework\core\Logger;
-use function nova\framework\config;
 
 class PoolManager
 {
@@ -22,13 +26,11 @@ class PoolManager
         });
     }
 
-
     public function __construct(
         int    $concurrency = 4,
         int    $timeout = 24 * 3600,
         string $cacheKey = 'task_pool'
-    )
-    {
+    ) {
         $this->concurrency = max(1, $concurrency);
         $this->timeout = $timeout;
         $this->cacheKey = $cacheKey;
@@ -37,8 +39,8 @@ class PoolManager
     /**
      * 推送一个新阶段任务
      *
-     * @param array $items
-     * @param callable $worker function(mixed $item, int $index, PoolManager $mgr): void
+     * @param array         $items
+     * @param callable      $worker function(mixed $item, int $index, PoolManager $mgr): void
      * @param callable|null $finish function(): void
      */
     public static function pushStage(array $items, callable $worker, callable $finish = null): void
@@ -47,7 +49,7 @@ class PoolManager
             'items' => $items,
             'worker' => $worker,
             'finish' => $finish ?? function () {
-                },
+            },
         ]));
     }
 
@@ -65,10 +67,9 @@ class PoolManager
                 Logger::error($e->getMessage(), $e->getTrace());
             } finally {
                 Context::instance()->cache->delete($key);
-                Context::instance()->cache->set(self::SERVER_KEY,getmypid(),20);
+                Context::instance()->cache->set(self::SERVER_KEY, getmypid(), 20);
             }
         }
-
 
     }
 
@@ -87,11 +88,15 @@ class PoolManager
         $processes = [];
         $startIndex = 0;
         foreach (array_chunk($items, $chunkSize) as $chunk) {
-            if (Context::instance()->cache->get(self::SERVER_KEY) == null) break;
+            if (Context::instance()->cache->get(self::SERVER_KEY) == null) {
+                break;
+            }
             $base = $startIndex;
             $processes[] = go(function () use ($chunk, $worker, $base) {
                 foreach ($chunk as $i => $item) {
-                    if (Context::instance()->cache->get(self::SERVER_KEY) == null) break;
+                    if (Context::instance()->cache->get(self::SERVER_KEY) == null) {
+                        break;
+                    }
                     // 把自己传进去，worker 内可以再 call $mgr->pushStage(...)
                     $worker($item, $base + $i, $this);
                 }

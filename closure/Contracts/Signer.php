@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace nova\plugin\task\closure\Contracts;
 
 interface Signer
@@ -7,7 +9,7 @@ interface Signer
     /**
      * Sign the given serializable.
      *
-     * @param  string  $serializable
+     * @param  string $serializable
      * @return array
      */
     public function sign($serializable);
@@ -15,7 +17,7 @@ interface Signer
     /**
      * Verify the given signature.
      *
-     * @param  array  $signature
+     * @param  array $signature
      * @return bool
      */
     public function verify($signature);

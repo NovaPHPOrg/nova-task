@@ -17,6 +17,7 @@ use Closure;
 use nova\framework\core\Logger;
 use nova\plugin\task\closure\Exceptions\PhpVersionNotSupportedException;
 use nova\plugin\task\closure\SerializableClosure;
+
 /**
  * 通用递归遍历器
  * 只负责“遍历”，不修改结构、不做任何 prefix 去除动作！
@@ -54,7 +55,6 @@ function traversalClosure(&$value, callable $callback): void
     // 其他类型不用处理
 }
 
-
 /**
  * 序列化入口
  */
@@ -73,7 +73,6 @@ function __serialize($data): string
 
     return serialize($data);
 }
-
 
 /**
  * 反序列化入口
@@ -97,7 +96,6 @@ function __unserialize(?string $data)
     return $result;
 }
 
-
 /**
  * 启动一个异步任务
  * @param Closure $function 任务函数
@@ -107,8 +105,6 @@ function go(Closure $function, int $timeout = 300): ?TaskObject
 {
     return Task::start($function, $timeout);
 }
-
-
 
 function go_wait(?TaskObject $taskObj)
 {
@@ -122,15 +118,12 @@ function go_wait(?TaskObject $taskObj)
  * 并发跑任务
  *
  * @template T
- * @param array<T> $items 要处理的任务列表
- * @param int $timeout 超时
- * @param callable $worker 业务处理器：function (T $item, int $index, ...$extra): void
+ * @param array<T> $items   要处理的任务列表
+ * @param int      $timeout 超时
+ * @param callable $worker  业务处理器：function (T $item, int $index, ...$extra): void
  * @param callable $finish
  */
-function run_pool(array $items,int $timeout, callable $worker, callable $finish): void
+function run_pool(array $items, int $timeout, callable $worker, callable $finish): void
 {
-   PoolManager::instance($timeout)->runPool($items,$worker,$finish);
+    PoolManager::instance($timeout)->runPool($items, $worker, $finish);
 }
-
-
-

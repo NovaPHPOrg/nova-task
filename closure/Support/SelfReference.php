@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace nova\plugin\task\closure\Support;
 
 class SelfReference
@@ -14,7 +16,7 @@ class SelfReference
     /**
      * Creates a new self reference instance.
      *
-     * @param  string  $hash
+     * @param  string $hash
      * @return void
      */
     public function __construct($hash)

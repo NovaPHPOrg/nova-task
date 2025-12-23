@@ -21,12 +21,12 @@ use nova\framework\event\EventManager;
 use nova\framework\exception\AppExitException;
 use nova\framework\http\Response;
 
-use nova\plugin\login\LoginManager;
 use function nova\framework\isCli;
-
 use function nova\framework\isWorkerman;
 
 use nova\plugin\corn\schedule\TaskerManager;
+
+use nova\plugin\login\LoginManager;
 
 use RuntimeException;
 

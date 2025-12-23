@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace nova\plugin\task\closure;
 
 use Closure;
@@ -16,7 +18,7 @@ class UnsignedSerializableClosure
     /**
      * Creates a new serializable closure instance.
      *
-     * @param  \Closure  $closure
+     * @param  \Closure $closure
      * @return void
      */
     public function __construct(Closure $closure)
@@ -59,7 +61,7 @@ class UnsignedSerializableClosure
     /**
      * Restore the closure after serialization.
      *
-     * @param  array{serializable: \nova\plugin\task\closure\Contracts\Serializable}  $data
+     * @param  array{serializable: \nova\plugin\task\closure\Contracts\Serializable} $data
      * @return void
      */
     public function __unserialize($data)

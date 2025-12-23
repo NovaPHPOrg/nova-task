@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace nova\plugin\task\closure\Support;
 
 #[\AllowDynamicProperties]
@@ -43,10 +45,10 @@ class ClosureStream
     /**
      * Opens file or URL.
      *
-     * @param  string  $path
-     * @param  string  $mode
-     * @param  string  $options
-     * @param  string|null  $opened_path
+     * @param  string      $path
+     * @param  string      $mode
+     * @param  string      $options
+     * @param  string|null $opened_path
      * @return bool
      */
     public function stream_open($path, $mode, $options, &$opened_path)
@@ -60,7 +62,7 @@ class ClosureStream
     /**
      * Read from stream.
      *
-     * @param  int  $count
+     * @param  int    $count
      * @return string
      */
     public function stream_read($count)
@@ -112,8 +114,8 @@ class ClosureStream
     /**
      * Retrieve information about a file.
      *
-     * @param  string  $path
-     * @param  int  $flags
+     * @param  string     $path
+     * @param  int        $flags
      * @return array|bool
      */
     public function url_stat($path, $flags)

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace nova\plugin\task\closure;
 
 use Closure;
@@ -19,7 +21,7 @@ class SerializableClosure
     /**
      * Creates a new serializable closure instance.
      *
-     * @param  \Closure  $closure
+     * @param  \Closure $closure
      * @return void
      */
     public function __construct(Closure $closure)
@@ -52,7 +54,7 @@ class SerializableClosure
     /**
      * Create a new unsigned serializable closure instance.
      *
-     * @param  Closure  $closure
+     * @param  Closure                                               $closure
      * @return \nova\plugin\task\closure\UnsignedSerializableClosure
      */
     public static function unsigned(Closure $closure)
@@ -63,7 +65,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param  string|null  $secret
+     * @param  string|null $secret
      * @return void
      */
     public static function setSecretKey($secret)
@@ -76,7 +78,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param  \Closure|null  $transformer
+     * @param  \Closure|null $transformer
      * @return void
      */
     public static function transformUseVariablesUsing($transformer)
@@ -87,7 +89,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param  \Closure|null  $resolver
+     * @param  \Closure|null $resolver
      * @return void
      */
     public static function resolveUseVariablesUsing($resolver)
@@ -110,7 +112,7 @@ class SerializableClosure
     /**
      * Restore the closure after serialization.
      *
-     * @param  array{serializable: \nova\plugin\task\closure\Serializers\Signed|\nova\plugin\task\closure\Contracts\Serializable}  $data
+     * @param  array{serializable: \nova\plugin\task\closure\Serializers\Signed|\nova\plugin\task\closure\Contracts\Serializable} $data
      * @return void
      *
      * @throws \nova\plugin\task\closure\Exceptions\InvalidSignatureException
