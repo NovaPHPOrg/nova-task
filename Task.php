@@ -55,7 +55,7 @@ class Task extends StaticRegister
                     throw new AppExitException(Response::asJson([
                         'code' => 200,
                         'count' => sizeof($tasks),
-                        'data' => $tasks,
+                        'data' => array_values($tasks),
                     ]));
                 }
 
