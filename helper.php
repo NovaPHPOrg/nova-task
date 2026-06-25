@@ -125,5 +125,5 @@ function go_wait(?TaskObject $taskObj)
  */
 function run_pool(array $items, int $timeout, callable $worker, callable $finish): void
 {
-    PoolManager::instance($timeout)->runPool($items, $worker, $finish);
+    PoolManager::getInstance(0, $timeout)->runPool($items, $worker, $finish);
 }

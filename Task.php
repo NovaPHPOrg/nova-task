@@ -24,41 +24,20 @@ use nova\framework\http\Response;
 use function nova\framework\isCli;
 use function nova\framework\isWorkerman;
 
-use nova\plugin\corn\schedule\TaskerManager;
-
-use nova\plugin\login\LoginManager;
-
 use RuntimeException;
 
 class Task extends StaticRegister
 {
     public const int CONNECT_TIMEOUT_MS = 3000;    // 连接超时5秒
     public const int TOTAL_TIMEOUT_MS = 3000;     // 总超时10秒
-    const string TASK_TPL =  ROOT_PATH . DS . 'nova' . DS . 'plugin' . DS . 'task' . DS . 'tpl' . DS."task";
 
     public static function registerInfo(): void
     {
         include_once __DIR__ . "/helper.php";
 
         EventManager::addListener("route.before", function ($event, &$data) {
-            if ($data == "/task/start") {
+            if ($data === "/task/start") {
                 Task::response();
-            } elseif ($data == "/task/list") {
-                if (
-                    !class_exists('\nova\plugin\cookie\Session')
-                ||  !class_exists('\nova\plugin\login\LoginManager')
-                ) {
-                    return;
-                }
-                if (LoginManager::getInstance()->checkLogin()) {
-                    $tasks = TaskerManager::list();
-                    throw new AppExitException(Response::asJson([
-                        'code' => 200,
-                        'count' => sizeof($tasks),
-                        'data' => array_values($tasks),
-                    ]));
-                }
-
             }
         });
     }
