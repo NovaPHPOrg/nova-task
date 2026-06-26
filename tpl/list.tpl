@@ -46,6 +46,8 @@
         <div class="col-xs-12 title-large center-vertical mb-4">
             <mdui-icon name="manage_history" class="mr-2"></mdui-icon>
             <span>后台任务</span>
+            <div style="flex-grow: 1"></div>
+            <mdui-button-icon icon="refresh" id="refreshTable" variant="outlined"></mdui-button-icon>
         </div>
 
         <div class="col-xs-12">

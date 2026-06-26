@@ -38,8 +38,7 @@ window.pageOnLoad = function () {
         height: 'auto',
         lineHeight: 'auto',
         mobile: true,
-        page: true,
-        pageSizes: [10, 20, 50, 100],
+        page: false,
         selectable: false,
         break: false,
         events: {
@@ -118,6 +117,10 @@ window.pageOnLoad = function () {
         stopPolling();
         logTimer = setInterval(fetchLog, 2000);
     }
+
+    $('#refreshTable').on('click', function () {
+        table.reload({}, true);
+    });
 
     window.pageOnUnLoad = function () {
         stopPolling();
