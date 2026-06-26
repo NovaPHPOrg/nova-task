@@ -97,13 +97,28 @@ function __unserialize(?string $data)
 }
 
 /**
- * 启动一个异步任务
+ * 启动一个异步任务。
+ *
+ * 任务名为必填——所有后台任务都会登记到后台任务面板，并自动记录开始/结束/异常日志。
+ * 任务体内可直接调用 TaskLogger::log() 写过程日志，无需关心任务 ID。
+ *
+ * @param string  $name     任务名称（展示在后台任务面板）
  * @param Closure $function 任务函数
  * @param int     $timeout  异步任务的最长运行时间,单位为秒
  */
-function go(Closure $function, int $timeout = 300): ?TaskObject
+function go(string $name, Closure $function, int $timeout = 300): ?TaskObject
 {
-    return Task::start($function, $timeout);
+    $wrapped = function () use ($name, $function) {
+        TaskLogger::start($name);
+        try {
+            $function();
+            TaskLogger::finish();
+        } catch (\Throwable $e) {
+            TaskLogger::fail($e);
+            throw $e;
+        }
+    };
+    return Task::start($wrapped, $timeout);
 }
 
 function go_wait(?TaskObject $taskObj)
@@ -112,18 +127,4 @@ function go_wait(?TaskObject $taskObj)
         return;
     }
     Task::wait($taskObj);
-}
-
-/**
- * 并发跑任务
- *
- * @template T
- * @param array<T> $items   要处理的任务列表
- * @param int      $timeout 超时
- * @param callable $worker  业务处理器：function (T $item, int $index, ...$extra): void
- * @param callable $finish
- */
-function run_pool(array $items, int $timeout, callable $worker, callable $finish): void
-{
-    PoolManager::getInstance(0, $timeout)->runPool($items, $worker, $finish);
 }

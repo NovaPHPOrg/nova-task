@@ -16,82 +16,18 @@ use Closure;
 use Exception;
 use nova\framework\core\Context;
 use nova\framework\core\Logger;
-use nova\framework\core\StaticRegister;
-use nova\framework\event\EventManager;
 use nova\framework\exception\AppExitException;
-use nova\framework\http\Response;
 
 use function nova\framework\isCli;
-use function nova\framework\isWorkerman;
 
 use RuntimeException;
 
-class Task extends StaticRegister
+class Task
 {
     public const int CONNECT_TIMEOUT_MS = 3000;    // 连接超时5秒
     public const int TOTAL_TIMEOUT_MS = 3000;     // 总超时10秒
 
-    public static function registerInfo(): void
-    {
-        include_once __DIR__ . "/helper.php";
-
-        EventManager::addListener("route.before", function ($event, &$data) {
-            if ($data === "/task/start") {
-                Task::response();
-            }
-        });
-    }
-
-    /**
-     * @throws AppExitException
-     */
-    private static function response(): void
-    {
-        self::noWait();
-        $key = Context::instance()->request()->getHeaderValue("Token") ?? "";
-        Logger::info("Tasker Key：" . $key);
-        $task = self::getTask($key);
-
-        if (empty($task)) {
-            throw new AppExitException(Response::asText("task not found"), "Response Task Fail");
-        }
-
-        $function = $task->function;
-        $timeout = $task->timeout ?? 60;
-        Logger::info("Response Tasker Key：" . $key . " Timeout：" . $timeout);
-        set_time_limit($timeout);
-        if (!empty($function) && $function instanceof Closure) {
-            $function();
-        }
-        $cache = Context::instance()->cache;
-        $cache->delete($key);
-        throw new AppExitException(Response::asText("task success"), "Response Task Success");
-    }
-
-    public static function noWait(int $time = 0): void
-    {
-
-        // 传统 PHP-FPM 环境下的处理
-        session_write_close();
-        ignore_user_abort(true);
-        set_time_limit($time);
-        if (isWorkerman()) {
-            // WorkermanApp::instance()->sendResponse();
-            return;
-        }
-        ob_end_clean();
-        ob_start();
-        header("Connection: close");
-        header("HTTP/1.1 200 OK");
-        header("Content-Length: 0");
-        ob_end_flush();
-        flush();
-        if (function_exists("fastcgi_finish_request")) {
-            fastcgi_finish_request();
-        }
-    }
-
-    private static function getTask($key): ?TaskObject
+    public static function getTask($key): ?TaskObject
     {
         try {
             $cache = Context::instance()->cache;
