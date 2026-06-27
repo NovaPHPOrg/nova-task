@@ -31,6 +31,9 @@ class TaskLogger
     /** 记录保留时长（秒），运行中每次写日志会续期 */
     private const int TTL = 86400;
 
+    /** 已完成任务过期时长（毫秒），超过此时间自动清理 */
+    private const int FINISHED_EXPIRE_MS = 6 * 3600 * 1000;
+
     /** 单任务日志环形缓冲上限 */
     private const int MAX_LOGS = 500;
 
@@ -39,24 +42,27 @@ class TaskLogger
 
     /**
      * 开始一个任务记录，返回任务 ID，并设为当前任务。
+     *
+     * @param int $maxTime 最长运行时间（秒），0 表示常驻任务不限时
      */
-    public static function start(string $name): string
+    public static function start(string $name, int $maxTime = 0): string
     {
         $id = uniqid('trec_');
         self::$currentId = $id;
 
         $now = self::now();
         $record = [
-            'id'     => $id,
-            'name'   => $name !== '' ? $name : '未命名任务',
-            'status' => 'running',
-            'pid'    => getmypid() ?: 0,
-            'start'  => $now,
-            'end'    => 0,
-            'logs'   => [],
+            'id'      => $id,
+            'name'    => $name !== '' ? $name : '未命名任务',
+            'status'  => 'running',
+            'pid'     => getmypid() ?: 0,
+            'start'   => $now,
+            'end'     => 0,
+            'maxTime' => $maxTime * 1000,
+            'logs'    => [],
         ];
         self::save($id, $record);
-        self::log('任务开始');
+        self::log($maxTime > 0 ? "任务开始，最长运行 {$maxTime} 秒" : '任务开始（常驻）');
         return $id;
     }
 
@@ -112,19 +118,45 @@ class TaskLogger
     }
 
     /**
-     * 列出所有任务记录，按开始时间倒序。
+     * 列出所有正在运行的任务，按开始时间倒序。
+     *
+     * @return array<int, array<string,mixed>>
+     */
+    public static function running(): array
+    {
+        return array_values(array_filter(
+            self::list(),
+            static fn (array $r): bool => $r['status'] === 'running'
+        ));
+    }
+
+    /**
+     * 列出所有任务记录，按开始时间倒序。已完成超过6小时的记录会被自动清理。
      *
      * @return array<int, array<string,mixed>>
      */
     public static function list(): array
     {
         $all = Context::instance()->cache->getAll(rtrim(self::PREFIX, "/")) ?: [];
+        $now = self::now();
+        $cache = Context::instance()->cache;
 
         $records = [];
         foreach ($all as $record) {
-            if (is_array($record) && isset($record['id'])) {
-                $records[] = $record;
+            if (!is_array($record) || !isset($record['id'])) {
+                continue;
             }
+            if ($record['status'] !== 'running' && $record['end'] > 0 && ($now - $record['end']) > self::FINISHED_EXPIRE_MS) {
+                $cache->delete(self::PREFIX . $record['id']);
+                continue;
+            }
+            if ($record['status'] === 'running' && ($record['maxTime'] ?? 0) > 0 && ($now - $record['start']) > $record['maxTime']) {
+                $record['status'] = 'failed';
+                $record['end'] = $now;
+                $record['logs'][] = ['t' => $now, 'level' => 'error', 'msg' => '任务超时'];
+                $cache->set(self::PREFIX . $record['id'], $record, self::TTL);
+            }
+            $records[] = $record;
         }
         usort($records, static fn (array $a, array $b): int => $b['start'] <=> $a['start']);
         return $records;

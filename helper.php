@@ -108,8 +108,8 @@ function __unserialize(?string $data)
  */
 function go(string $name, Closure $function, int $timeout = 300): ?TaskObject
 {
-    $wrapped = function () use ($name, $function) {
-        TaskLogger::start($name);
+    $wrapped = function () use ($name, $function, $timeout) {
+        TaskLogger::start($name, $timeout);
         try {
             $function();
             TaskLogger::finish();
