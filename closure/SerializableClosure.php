@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace nova\plugin\task\closure;
 
 use Closure;
+use nova\plugin\task\closure\Contracts\Serializable;
 use nova\plugin\task\closure\Exceptions\InvalidSignatureException;
 use nova\plugin\task\closure\Serializers\Signed;
 use nova\plugin\task\closure\Signers\Hmac;
@@ -14,14 +15,14 @@ class SerializableClosure
     /**
      * The closure's serializable.
      *
-     * @var \nova\plugin\task\closure\Contracts\Serializable
+     * @var Serializable
      */
     protected $serializable;
 
     /**
      * Creates a new serializable closure instance.
      *
-     * @param  \Closure $closure
+     * @param Closure $closure
      * @return void
      */
     public function __construct(Closure $closure)
@@ -44,7 +45,7 @@ class SerializableClosure
     /**
      * Gets the closure.
      *
-     * @return \Closure
+     * @return Closure
      */
     public function getClosure()
     {
@@ -55,7 +56,7 @@ class SerializableClosure
      * Create a new unsigned serializable closure instance.
      *
      * @param  Closure                                               $closure
-     * @return \nova\plugin\task\closure\UnsignedSerializableClosure
+     * @return UnsignedSerializableClosure
      */
     public static function unsigned(Closure $closure)
     {
@@ -78,7 +79,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param  \Closure|null $transformer
+     * @param Closure|null $transformer
      * @return void
      */
     public static function transformUseVariablesUsing($transformer)
@@ -89,7 +90,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param  \Closure|null $resolver
+     * @param Closure|null $resolver
      * @return void
      */
     public static function resolveUseVariablesUsing($resolver)
@@ -100,7 +101,7 @@ class SerializableClosure
     /**
      * Get the serializable representation of the closure.
      *
-     * @return array{serializable: \nova\plugin\task\closure\Serializers\Signed|\nova\plugin\task\closure\Contracts\Serializable}
+     * @return array{serializable: Signed|Serializable}
      */
     public function __serialize()
     {
@@ -112,10 +113,10 @@ class SerializableClosure
     /**
      * Restore the closure after serialization.
      *
-     * @param  array{serializable: \nova\plugin\task\closure\Serializers\Signed|\nova\plugin\task\closure\Contracts\Serializable} $data
+     * @param array{serializable: Signed|Serializable} $data
      * @return void
      *
-     * @throws \nova\plugin\task\closure\Exceptions\InvalidSignatureException
+     * @throws InvalidSignatureException
      */
     public function __unserialize($data)
     {

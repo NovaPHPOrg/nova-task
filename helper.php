@@ -17,6 +17,7 @@ use Closure;
 use nova\framework\core\Logger;
 use nova\plugin\task\closure\Exceptions\PhpVersionNotSupportedException;
 use nova\plugin\task\closure\SerializableClosure;
+use Throwable;
 
 /**
  * 通用递归遍历器
@@ -113,7 +114,7 @@ function go(string $name, Closure $function, int $timeout = 300): ?TaskObject
         try {
             $function();
             TaskLogger::finish();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             TaskLogger::fail($e);
             throw $e;
         }

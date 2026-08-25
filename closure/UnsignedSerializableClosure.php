@@ -5,20 +5,21 @@ declare(strict_types=1);
 namespace nova\plugin\task\closure;
 
 use Closure;
+use nova\plugin\task\closure\Contracts\Serializable;
 
 class UnsignedSerializableClosure
 {
     /**
      * The closure's serializable.
      *
-     * @var \nova\plugin\task\closure\Contracts\Serializable
+     * @var Serializable
      */
     protected $serializable;
 
     /**
      * Creates a new serializable closure instance.
      *
-     * @param  \Closure $closure
+     * @param Closure $closure
      * @return void
      */
     public function __construct(Closure $closure)
@@ -39,7 +40,7 @@ class UnsignedSerializableClosure
     /**
      * Gets the closure.
      *
-     * @return \Closure
+     * @return Closure
      */
     public function getClosure()
     {
@@ -49,7 +50,7 @@ class UnsignedSerializableClosure
     /**
      * Get the serializable representation of the closure.
      *
-     * @return array{serializable: \nova\plugin\task\closure\Contracts\Serializable}
+     * @return array{serializable: Serializable}
      */
     public function __serialize()
     {
@@ -61,7 +62,7 @@ class UnsignedSerializableClosure
     /**
      * Restore the closure after serialization.
      *
-     * @param  array{serializable: \nova\plugin\task\closure\Contracts\Serializable} $data
+     * @param array{serializable: Serializable} $data
      * @return void
      */
     public function __unserialize($data)

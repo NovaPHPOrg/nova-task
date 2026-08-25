@@ -11,8 +11,10 @@ namespace nova\plugin\task;
 use nova\framework\core\Instance;
 use nova\framework\http\Request;
 use nova\framework\http\Response;
+use nova\framework\route\Route;
 use nova\plugin\login\AdminPageInterface;
 use nova\plugin\tpl\ViewResponse;
+use function nova\framework\route;
 
 /**
  * 后台任务面板页面（后台管理菜单项）。
@@ -21,8 +23,8 @@ class TaskPanelTpl extends Instance implements AdminPageInterface
 {
     public function registerRouter(string $model, string $controller): void
     {
-        $default = \nova\framework\route($model, $controller, 'init');
-        \nova\framework\route\Route::getInstance()
+        $default = route($model, $controller, 'init');
+        Route::getInstance()
             ->get('/tasks/list', $default);
     }
 

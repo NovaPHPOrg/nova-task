@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace nova\plugin\task\closure\Contracts;
 
+use Closure;
+
 interface Serializable
 {
     /**
@@ -16,7 +18,7 @@ interface Serializable
     /**
      * Gets the closure that got serialized/unserialized.
      *
-     * @return \Closure
+     * @return Closure
      */
     public function getClosure();
 }

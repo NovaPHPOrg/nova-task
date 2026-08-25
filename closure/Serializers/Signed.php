@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace nova\plugin\task\closure\Serializers;
 
+use Closure;
 use nova\plugin\task\closure\Contracts\Serializable;
+use nova\plugin\task\closure\Contracts\Signer;
 use nova\plugin\task\closure\Exceptions\InvalidSignatureException;
 use nova\plugin\task\closure\Exceptions\MissingSecretKeyException;
 
@@ -13,21 +15,21 @@ class Signed implements Serializable
     /**
      * The signer that will sign and verify the closure's signature.
      *
-     * @var \nova\plugin\task\closure\Contracts\Signer|null
+     * @var Signer|null
      */
     public static $signer;
 
     /**
      * The closure to be serialized/unserialized.
      *
-     * @var \Closure
+     * @var Closure
      */
     protected $closure;
 
     /**
      * Creates a new serializable closure instance.
      *
-     * @param  \Closure $closure
+     * @param Closure $closure
      * @return void
      */
     public function __construct($closure)
@@ -48,7 +50,7 @@ class Signed implements Serializable
     /**
      * Gets the closure.
      *
-     * @return \Closure
+     * @return Closure
      */
     public function getClosure()
     {
@@ -77,7 +79,7 @@ class Signed implements Serializable
      * @param  array{serializable: string, hash: string} $signature
      * @return void
      *
-     * @throws \nova\plugin\task\closure\Exceptions\InvalidSignatureException
+     * @throws InvalidSignatureException
      */
     public function __unserialize($signature)
     {
@@ -85,7 +87,7 @@ class Signed implements Serializable
             throw new InvalidSignatureException();
         }
 
-        /** @var \nova\plugin\task\closure\Contracts\Serializable $serializable */
+        /** @var Serializable $serializable */
         $serializable = unserialize($signature['serializable']);
 
         $this->closure = $serializable->getClosure();

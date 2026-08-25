@@ -13,14 +13,13 @@ declare(strict_types=1);
 namespace nova\plugin\task;
 
 use Closure;
+use Error;
 use Exception;
 use nova\framework\core\Context;
 use nova\framework\core\Logger;
 use nova\framework\exception\AppExitException;
-
-use function nova\framework\isCli;
-
 use RuntimeException;
+use function nova\framework\isCli;
 
 class Task
 {
@@ -33,7 +32,7 @@ class Task
             $cache = Context::instance()->cache;
             $result = $cache->get($key);
             return __unserialize($result);
-        } catch (Exception|\Error $exception) {
+        } catch (Exception|Error $exception) {
             Logger::error("Tasker Error：" . $exception->getMessage());
             return null;
         }
