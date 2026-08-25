@@ -10,7 +10,6 @@ namespace nova\plugin\task;
 
 use nova\framework\core\Context;
 use nova\framework\core\Logger;
-
 use Throwable;
 
 /**
@@ -150,11 +149,8 @@ class TaskLogger
                 $cache->delete(self::PREFIX . $record['id']);
                 continue;
             }
-            if ($record['status'] === 'running' && ($record['maxTime'] ?? 0) > 0 && ($now - $record['start']) > $record['maxTime']) {
-                $record['status'] = 'failed';
-                $record['end'] = $now;
-                $record['logs'][] = ['t' => $now, 'level' => 'error', 'msg' => '任务超时'];
-                $cache->set(self::PREFIX . $record['id'], $record, self::TTL);
+            if ($record['status'] === 'running') {
+                $record = self::reconcileRunningRecord($record, $now, $cache);
             }
             $records[] = $record;
         }
@@ -207,5 +203,59 @@ class TaskLogger
     private static function now(): int
     {
         return (int)(microtime(true) * 1000);
+    }
+
+    /**
+     * 将 running 记录与真实进程对齐：超时或 worker 已死则标为 failed。
+     *
+     * @param array<string,mixed> $record
+     * @return array<string,mixed>
+     */
+    private static function reconcileRunningRecord(array $record, int $now, $cache): array
+    {
+        if (($record['maxTime'] ?? 0) > 0 && ($now - $record['start']) > $record['maxTime']) {
+            $record['status'] = 'failed';
+            $record['end'] = $now;
+            $record['logs'][] = ['t' => $now, 'level' => 'error', 'msg' => '任务超时'];
+            $cache->set(self::PREFIX . $record['id'], $record, self::TTL);
+
+            return $record;
+        }
+
+        $pid = (int)($record['pid'] ?? 0);
+        $alive = self::isProcessAlive($pid);
+        if ($pid > 0 && $alive === false) {
+            $record['status'] = 'failed';
+            $record['end'] = $now;
+            $record['logs'][] = [
+                't' => $now,
+                'level' => 'error',
+                'msg' => "worker 进程已退出(pid={$pid})，任务中断",
+            ];
+            $cache->set(self::PREFIX . $record['id'], $record, self::TTL);
+            Logger::warning('[TaskLogger] 僵尸任务已清理: ' . ($record['name'] ?? '') . " pid={$pid}");
+        }
+
+        return $record;
+    }
+
+    /**
+     * @return bool|null true=存活, false=已退出, null=当前环境无法判断
+     */
+    private static function isProcessAlive(int $pid): ?bool
+    {
+        if ($pid <= 0) {
+            return false;
+        }
+
+        if (function_exists('posix_kill')) {
+            return @posix_kill($pid, 0);
+        }
+
+        if (PHP_OS_FAMILY === 'Linux') {
+            return is_dir("/proc/{$pid}");
+        }
+
+        return null;
     }
 }
