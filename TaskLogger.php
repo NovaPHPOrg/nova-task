@@ -240,22 +240,56 @@ class TaskLogger
     }
 
     /**
-     * @return bool|null true=存活, false=已退出, null=当前环境无法判断
+     * @param $pid
+     * @return bool true=存活, false=已退出, null=当前环境无法判断
      */
-    private static function isProcessAlive(int $pid): ?bool
+
+    static function isProcessAlive($pid): bool
     {
+        // 1. 安全过滤：强制转换为整数，防止传入非法字符导致命令注入漏洞
+        $pid = (int)$pid;
         if ($pid <= 0) {
             return false;
         }
 
-        if (function_exists('posix_kill')) {
-            return @posix_kill($pid, 0);
-        }
+        // 2. 判断是否为 Windows 系统
+        // DIRECTORY_SEPARATOR 在 Windows 下是 '\'，在类 Unix 下是 '/'
+        $isWindows = (DIRECTORY_SEPARATOR === '\\' || stristr(PHP_OS, 'WIN'));
 
-        if (PHP_OS_FAMILY === 'Linux') {
-            return is_dir("/proc/{$pid}");
-        }
+        if ($isWindows) {
+            // -------------------------
+            // Windows 环境
+            // -------------------------
+            // /NH 隐藏表头，2>NUL 屏蔽错误流
+            exec("tasklist /FI \"PID eq $pid\" /NH 2>NUL", $output);
+            $outputStr = implode(" ", $output);
 
-        return null;
+            // 如果进程不存在，Windows 会输出 "INFO: No tasks are running..."
+            // 如果存在，输出中会包含该 PID 的信息
+            return str_contains($outputStr, (string)$pid);
+
+        } else {
+            // -------------------------
+            // macOS / Linux / Unix 环境
+            // -------------------------
+
+            // 优先使用 POSIX 扩展（效率最高，不需要创建子进程）
+            if (function_exists('posix_kill')) {
+                $isAlive = posix_kill($pid, 0);
+                if (!$isAlive) {
+                    // 返回 1 (EPERM) 说明进程存在，只是当前用户没有权限（比如它是 root 进程）
+                    return posix_get_last_error() == 1;
+                }
+                return true;
+            }
+
+            // 如果服务器没有安装 POSIX 扩展，降级使用 ps 命令
+            // ps -p 会输出该进程的信息。2>&1 将错误输出合并
+            exec("ps -p $pid 2>&1", $output);
+
+            // ps 命令通常会输出一行表头 (如 PID TTY TIME CMD)
+            // 如果输出超过 1 行，说明找到了该进程
+            return count($output) > 1;
+        }
     }
 }
