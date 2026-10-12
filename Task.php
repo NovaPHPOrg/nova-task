@@ -20,6 +20,7 @@ use nova\framework\core\Logger;
 use nova\framework\exception\AppExitException;
 
 use function nova\framework\isCli;
+use function nova\framework\isWorkerman;
 
 use RuntimeException;
 
@@ -121,7 +122,22 @@ class Task
     {
 
         $req = Context::instance()->request();
-        $url = $req->getBasicAddress() . "/task/start";
+        $headers = [
+            'Token: ' . $taskObject->key,
+            'Connection: Close'
+        ];
+        if (isWorkerman()) {
+            // 直连接受本次连接的本地地址：端口映射/反代后 Host 在进程内不可达，且监听地址不一定是 0.0.0.0
+            $addr = $_SERVER['SERVER_ADDR'];
+            $host = str_contains($addr, ':') ? "[$addr]" : $addr;
+            $url = "http://{$host}:" . $req->port() . "/task/start";
+            $headers[] = 'Host: ' . $req->getDomain();
+            if ($req->getHttpScheme() === 'https://') {
+                $headers[] = 'X-Forwarded-Proto: https';
+            }
+        } else {
+            $url = $req->getBasicAddress() . "/task/start";
+        }
 
         Logger::debug("Tasker Start：" . $url);
         $ch = curl_init();
@@ -140,10 +156,7 @@ class Task
         ];
         Logger::debug("Tasker DNS：" . json_encode($dns));
         curl_setopt($ch, CURLOPT_RESOLVE, $dns);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Token: ' . $taskObject->key,
-            'Connection: Close'
-        ]);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         if (!curl_exec($ch)) {
             //输出错误信息
