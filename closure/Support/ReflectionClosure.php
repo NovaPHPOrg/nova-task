@@ -10,8 +10,10 @@ defined('T_FN') || define('T_FN', -6);
 defined('T_NULLSAFE_OBJECT_OPERATOR') || define('T_NULLSAFE_OBJECT_OPERATOR', -7);
 
 use Closure;
-use ReflectionFunction;
+
 use const PHP_MAJOR_VERSION;
+
+use ReflectionFunction;
 
 class ReflectionClosure extends ReflectionFunction
 {
@@ -33,7 +35,7 @@ class ReflectionClosure extends ReflectionFunction
     /**
      * Creates a new reflection closure instance.
      *
-     * @param Closure $closure
+     * @param  Closure     $closure
      * @param  string|null $code
      * @return void
      */

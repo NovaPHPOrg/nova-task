@@ -18,8 +18,10 @@ use Exception;
 use nova\framework\core\Context;
 use nova\framework\core\Logger;
 use nova\framework\exception\AppExitException;
-use RuntimeException;
+
 use function nova\framework\isCli;
+
+use RuntimeException;
 
 class Task
 {

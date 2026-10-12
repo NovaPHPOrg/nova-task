@@ -208,7 +208,7 @@ class TaskLogger
     /**
      * 将 running 记录与真实进程对齐：超时或 worker 已死则标为 failed。
      *
-     * @param array<string,mixed> $record
+     * @param  array<string,mixed> $record
      * @return array<string,mixed>
      */
     private static function reconcileRunningRecord(array $record, int $now, $cache): array
@@ -240,11 +240,11 @@ class TaskLogger
     }
 
     /**
-     * @param $pid
+     * @param       $pid
      * @return bool true=存活, false=已退出, null=当前环境无法判断
      */
 
-    static function isProcessAlive($pid): bool
+    public static function isProcessAlive($pid): bool
     {
         // 1. 安全过滤：强制转换为整数，防止传入非法字符导致命令注入漏洞
         $pid = (int)$pid;
