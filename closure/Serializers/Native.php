@@ -77,7 +77,7 @@ class Native implements Serializable
     /**
      * Creates a new serializable closure instance.
      *
-     * @param Closure $closure
+     * @param  Closure $closure
      * @return void
      */
     public function __construct(Closure $closure)
@@ -210,8 +210,8 @@ class Native implements Serializable
     /**
      * Ensures the given closures are serializable.
      *
-     * @param  mixed                                          $data
-     * @param ClosureScope $storage
+     * @param  mixed        $data
+     * @param  ClosureScope $storage
      * @return void
      */
     public static function wrapClosures(&$data, $storage)
@@ -519,7 +519,7 @@ class Native implements Serializable
     /**
      * Determine is virtual property.
      *
-     * @param ReflectionProperty $property
+     * @param  ReflectionProperty $property
      * @return bool
      */
     protected function isVirtualProperty(ReflectionProperty $property): bool

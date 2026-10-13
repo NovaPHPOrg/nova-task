@@ -29,7 +29,7 @@ class Signed implements Serializable
     /**
      * Creates a new serializable closure instance.
      *
-     * @param Closure $closure
+     * @param  Closure $closure
      * @return void
      */
     public function __construct($closure)

@@ -21,6 +21,8 @@ use function nova\framework\isWorkerman;
 use nova\framework\route\RouteTrait;
 use nova\plugin\login\AdminPage;
 use nova\plugin\login\route\Permission;
+use nova\plugin\workerman\adapter\WorkermanApp;
+use Workerman\Protocols\Http\Response as WorkermanHttpResponse;
 
 /**
  * 后台任务面板路由注册。
@@ -93,7 +95,8 @@ class TaskPanelManager extends StaticRegister
         ignore_user_abort(true);
         set_time_limit($time);
         if (isWorkerman()) {
-            // WorkermanApp::instance()->sendResponse();
+            // 先回 200 断开，否则发起方 curl 等满超时后会重试，同一任务被重复执行
+            WorkermanApp::instance()->connection()->close(new WorkermanHttpResponse(200));
             return;
         }
         ob_end_clean();
