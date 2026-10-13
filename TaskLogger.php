@@ -33,6 +33,9 @@ class TaskLogger
     /** 已完成任务过期时长（毫秒），超过此时间自动清理 */
     private const int FINISHED_EXPIRE_MS = 6 * 3600 * 1000;
 
+    /** 任务记录保留上限，超出后优先清理已结束的旧记录 */
+    private const int MAX_RECORDS = 20;
+
     /** 单任务日志环形缓冲上限 */
     private const int MAX_LOGS = 500;
 
@@ -130,7 +133,8 @@ class TaskLogger
     }
 
     /**
-     * 列出所有任务记录，按开始时间倒序。已完成超过6小时的记录会被自动清理。
+     * 列出所有任务记录，按开始时间倒序。
+     * 已完成超过 6 小时的记录会被自动清理；累计超过 20 条时，再清理超出部分中已结束的记录。
      *
      * @return array<int, array<string,mixed>>
      */
@@ -155,7 +159,43 @@ class TaskLogger
             $records[] = $record;
         }
         usort($records, static fn (array $a, array $b): int => $b['start'] <=> $a['start']);
-        return $records;
+        return self::pruneExcessFinished($records, $cache);
+    }
+
+    /**
+     * 任务累计超过 MAX_RECORDS 时，清理超出部分中已结束的旧记录。
+     * 运行中的任务始终保留；已结束任务按开始时间倒序优先保留较新的。
+     *
+     * @param array<int, array<string,mixed>> $records 已按开始时间倒序
+     * @return array<int, array<string,mixed>>
+     */
+    private static function pruneExcessFinished(array $records, $cache): array
+    {
+        if (count($records) <= self::MAX_RECORDS) {
+            return $records;
+        }
+
+        $running = [];
+        $finished = [];
+        foreach ($records as $record) {
+            if (($record['status'] ?? '') === 'running') {
+                $running[] = $record;
+            } else {
+                $finished[] = $record;
+            }
+        }
+
+        $keepFinished = max(0, self::MAX_RECORDS - count($running));
+        if (count($finished) > $keepFinished) {
+            foreach (array_slice($finished, $keepFinished) as $record) {
+                $cache->delete(self::PREFIX . $record['id']);
+            }
+            $finished = array_slice($finished, 0, $keepFinished);
+        }
+
+        $kept = array_merge($running, $finished);
+        usort($kept, static fn(array $a, array $b): int => $b['start'] <=> $a['start']);
+        return $kept;
     }
 
     /**
@@ -268,6 +308,25 @@ class TaskLogger
             self::save($id, $record);
         }
         self::$currentId = '';
+        self::trimFinishedRecords();
+    }
+
+    /**
+     * 不检查进程存活，仅按数量上限清理已结束记录。
+     */
+    private static function trimFinishedRecords(): void
+    {
+        $all = Context::instance()->cache->getAll(rtrim(self::PREFIX, '/')) ?: [];
+        $cache = Context::instance()->cache;
+        $records = [];
+        foreach ($all as $record) {
+            if (!is_array($record) || !isset($record['id'])) {
+                continue;
+            }
+            $records[] = $record;
+        }
+        usort($records, static fn(array $a, array $b): int => ($b['start'] ?? 0) <=> ($a['start'] ?? 0));
+        self::pruneExcessFinished($records, $cache);
     }
 
     /**
