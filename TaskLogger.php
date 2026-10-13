@@ -172,6 +172,88 @@ class TaskLogger
         return is_array($record) ? $record : null;
     }
 
+    /**
+     * 清理一条已结束的任务记录。运行中的任务不可直接删除。
+     */
+    public static function remove(string $id): bool
+    {
+        $record = self::get($id);
+        if ($record === null) {
+            return false;
+        }
+        if (($record['status'] ?? '') === 'running') {
+            return false;
+        }
+        Context::instance()->cache->delete(self::PREFIX . $id);
+        return true;
+    }
+
+    /**
+     * 清理全部已结束（完成/失败/已终止）的任务记录。
+     */
+    public static function cleanupFinished(): int
+    {
+        $all = Context::instance()->cache->getAll(rtrim(self::PREFIX, "/")) ?: [];
+        $cache = Context::instance()->cache;
+        $count = 0;
+        foreach ($all as $record) {
+            if (!is_array($record) || !isset($record['id'])) {
+                continue;
+            }
+            if (($record['status'] ?? '') === 'running') {
+                continue;
+            }
+            $cache->delete(self::PREFIX . $record['id']);
+            $count++;
+        }
+        return $count;
+    }
+
+    /**
+     * 强制终止正在运行的任务：杀掉 worker 进程并标记为 killed。
+     *
+     * @return array{ok:bool,msg:string}
+     */
+    public static function kill(string $id): array
+    {
+        $record = self::get($id);
+        if ($record === null) {
+            return ['ok' => false, 'msg' => '任务不存在'];
+        }
+        if (($record['status'] ?? '') !== 'running') {
+            return ['ok' => false, 'msg' => '任务未在运行'];
+        }
+
+        $pid = (int)($record['pid'] ?? 0);
+        $selfPid = (int)(getmypid() ?: 0);
+        if ($pid <= 1) {
+            return ['ok' => false, 'msg' => '无法定位 worker 进程'];
+        }
+        if ($pid === $selfPid) {
+            return ['ok' => false, 'msg' => '不能终止当前请求进程'];
+        }
+
+        if (self::isProcessAlive($pid)) {
+            $stopped = self::killProcess($pid);
+            if (!$stopped && self::isProcessAlive($pid)) {
+                return ['ok' => false, 'msg' => "无法终止进程(pid={$pid})"];
+            }
+        }
+
+        $now = self::now();
+        $record['status'] = 'killed';
+        $record['end'] = $now;
+        $record['logs'][] = [
+            't' => $now,
+            'level' => 'warn',
+            'msg' => "任务已被强制终止(pid={$pid})",
+        ];
+        self::save($id, $record);
+        Logger::warning('[TaskLogger] 任务已强制终止: ' . ($record['name'] ?? '') . " id={$id} pid={$pid}");
+
+        return ['ok' => true, 'msg' => '任务已终止'];
+    }
+
     private static function close(string $status, string $msg): void
     {
         $id = self::$currentId;
@@ -243,7 +325,6 @@ class TaskLogger
      * @param $pid
      * @return bool true=存活, false=已退出, null=当前环境无法判断
      */
-
     static function isProcessAlive($pid): bool
     {
         // 1. 安全过滤：强制转换为整数，防止传入非法字符导致命令注入漏洞
@@ -291,5 +372,39 @@ class TaskLogger
             // 如果输出超过 1 行，说明找到了该进程
             return count($output) > 1;
         }
+    }
+
+    /**
+     * 向目标进程发送终止信号。Windows 使用 taskkill，Unix 先 TERM 再 KILL。
+     */
+    private static function killProcess(int $pid): bool
+    {
+        if ($pid <= 1) {
+            return false;
+        }
+
+        $isWindows = (DIRECTORY_SEPARATOR === '\\' || stristr(PHP_OS, 'WIN'));
+        if ($isWindows) {
+            exec("taskkill /F /PID {$pid} 2>NUL", $output, $code);
+            return $code === 0 || !self::isProcessAlive($pid);
+        }
+
+        if (function_exists('posix_kill')) {
+            posix_kill($pid, 15);
+            usleep(200000);
+            if (self::isProcessAlive($pid)) {
+                posix_kill($pid, 9);
+                usleep(100000);
+            }
+            return !self::isProcessAlive($pid);
+        }
+
+        exec("kill -TERM {$pid} 2>/dev/null");
+        usleep(200000);
+        if (self::isProcessAlive($pid)) {
+            exec("kill -KILL {$pid} 2>/dev/null");
+            usleep(100000);
+        }
+        return !self::isProcessAlive($pid);
     }
 }

@@ -41,6 +41,9 @@ class TaskPanelManager extends StaticRegister
     {
         $this->get('/tasks/api/list', $this->map('monitor', 'list'));
         $this->get('/tasks/api/detail', $this->map('monitor', 'detail'));
+        $this->post('/tasks/api/kill', $this->map('monitor', 'kill'));
+        $this->post('/tasks/api/remove', $this->map('monitor', 'remove'));
+        $this->post('/tasks/api/cleanup', $this->map('monitor', 'cleanup'));
     }
 
     public static function registerInfo(): void

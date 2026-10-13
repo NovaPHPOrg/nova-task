@@ -47,6 +47,7 @@
             <mdui-icon name="manage_history" class="mr-2"></mdui-icon>
             <span>后台任务</span>
             <div style="flex-grow: 1"></div>
+            <mdui-button variant="outlined" icon="delete_sweep" id="cleanupFinished" class="mr-2">清理已完成</mdui-button>
             <mdui-button-icon icon="refresh" id="refreshTable" variant="outlined"></mdui-button-icon>
         </div>
 

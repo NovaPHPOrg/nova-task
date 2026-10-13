@@ -10,11 +10,15 @@ window.pageOnLoad = function () {
     var logLayerId = null;
 
     function statusText(s) {
-        return s === 'running' ? '运行中' : (s === 'done' ? '已完成' : (s === 'failed' ? '失败' : s));
+        if (s === 'running') return '运行中';
+        if (s === 'done') return '已完成';
+        if (s === 'failed') return '失败';
+        if (s === 'killed') return '已终止';
+        return s;
     }
 
     function statusTag(s) {
-        var cls = s === 'done' ? 'success' : (s === 'failed' ? 'error' : (s === 'running' ? 'info' : 'neutral'));
+        var cls = s === 'done' ? 'success' : (s === 'failed' || s === 'killed' ? 'error' : (s === 'running' ? 'info' : 'neutral'));
         return '<span class="tag tag-' + cls + '">' + statusText(s) + '</span>';
     }
 
@@ -31,6 +35,15 @@ window.pageOnLoad = function () {
         return Math.floor(sec / 3600) + ' 时 ' + Math.floor((sec % 3600) / 60) + ' 分';
     }
 
+    function actionButtons(row, index) {
+        var html = '<mdui-button-icon data-index="' + index + '" icon="article" class="action-log" title="查看日志"></mdui-button-icon>';
+        if (row.status === 'running') {
+            html += '<mdui-button-icon data-index="' + index + '" icon="stop_circle" class="action-kill" title="强制终止"></mdui-button-icon>';
+        } else {
+            html += '<mdui-button-icon data-index="' + index + '" icon="delete" class="action-remove" title="清理记录"></mdui-button-icon>';
+        }
+        return html;
+    }
 
     var table = new DataTable('#dataTable');
     table.load({
@@ -41,11 +54,6 @@ window.pageOnLoad = function () {
         page: false,
         selectable: false,
         break: false,
-        events: {
-            onRowClick: function (row) {
-                if (row && row.id) openLogs(row);
-            }
-        },
         columns: [
             { field: 'name', name: '任务名称', align: 'center', width: 'auto' },
             {
@@ -65,12 +73,11 @@ window.pageOnLoad = function () {
                 formatter: function (v, row) { return fmtDuration(row); }
             },
             {
-                field: 'op', name: '日志', align: 'center', width: '120px',
-                formatter: function () { return '<mdui-button variant="text" icon="article">查看</mdui-button>'; }
+                field: 'op', name: '操作', align: 'center', width: '140px',
+                formatter: function (v, row, index) { return actionButtons(row, index); }
             },
         ],
     });
-
 
     function renderLogs(record) {
         var logs = (record && record.logs) || [];
@@ -118,8 +125,66 @@ window.pageOnLoad = function () {
         logTimer = setInterval(fetchLog, 2000);
     }
 
+    $('#dataTable').on('click', '.action-log, .action-kill, .action-remove', function (e) {
+        e.stopPropagation();
+        var row = table.getRow($(this).data('index'));
+        if (!row) {
+            $.toaster.error('无法获取任务信息');
+            return;
+        }
+        if ($(this).hasClass('action-log')) {
+            openLogs(row);
+            return;
+        }
+        if ($(this).hasClass('action-kill')) {
+            $.layer.confirm({
+                msg: '将强制终止任务「' + (row.name || '') + '」，是否继续？',
+                yes: function () {
+                    $.request.postForm('/tasks/api/kill', { id: row.id }, function (res) {
+                        if (res.code === 200) {
+                            $.toaster.success(res.msg || '任务已终止');
+                            table.reload({}, true);
+                        } else {
+                            $.toaster.error(res.msg || '终止失败');
+                        }
+                    });
+                }
+            });
+            return;
+        }
+        $.layer.confirm({
+            msg: '将清理任务「' + (row.name || '') + '」的记录，是否继续？',
+            yes: function () {
+                $.request.postForm('/tasks/api/remove', { id: row.id }, function (res) {
+                    if (res.code === 200) {
+                        $.toaster.success(res.msg || '已清理');
+                        table.reload({}, true);
+                    } else {
+                        $.toaster.error(res.msg || '清理失败');
+                    }
+                });
+            }
+        });
+    });
+
     $('#refreshTable').on('click', function () {
         table.reload({}, true);
+    });
+
+    $('#cleanupFinished').on('click', function () {
+        $.layer.confirm({
+            msg: '将清理全部已完成、失败或已终止的任务记录，运行中的任务不会受影响，是否继续？',
+            yes: function () {
+                $.request.postForm('/tasks/api/cleanup', {}, function (res) {
+                    if (res.code === 200) {
+                        $.toaster.success(res.msg || '清理完成');
+                        table.reload({}, true);
+                    } else {
+                        $.toaster.error(res.msg || '清理失败');
+                    }
+                });
+            }
+        });
     });
 
     window.pageOnUnLoad = function () {
