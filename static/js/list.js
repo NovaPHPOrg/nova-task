@@ -82,7 +82,11 @@ window.pageOnLoad = function () {
     function renderLogs(record) {
         var logs = (record && record.logs) || [];
         var html = logs.map(function (l) {
-            var t = new Date(l.t).toLocaleTimeString();
+            var d = new Date(l.t);
+            var pad = function (n) {
+                return String(n).padStart(2, '0');
+            };
+            var t = pad(d.getHours()) + ':' + pad(d.getMinutes());
             return '<div class="task-log-line ' + $.escapeHtml(l.level) + '">'
                 + '<span class="task-log-time">' + $.escapeHtml(t) + '</span>'
                 + $.escapeHtml(l.msg) + '</div>';
