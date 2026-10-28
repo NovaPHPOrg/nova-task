@@ -166,7 +166,7 @@ class TaskLogger
      * 任务累计超过 MAX_RECORDS 时，清理超出部分中已结束的旧记录。
      * 运行中的任务始终保留；已结束任务按开始时间倒序优先保留较新的。
      *
-     * @param array<int, array<string,mixed>> $records 已按开始时间倒序
+     * @param  array<int, array<string,mixed>> $records 已按开始时间倒序
      * @return array<int, array<string,mixed>>
      */
     private static function pruneExcessFinished(array $records, $cache): array
@@ -194,7 +194,7 @@ class TaskLogger
         }
 
         $kept = array_merge($running, $finished);
-        usort($kept, static fn(array $a, array $b): int => $b['start'] <=> $a['start']);
+        usort($kept, static fn (array $a, array $b): int => $b['start'] <=> $a['start']);
         return $kept;
     }
 
@@ -325,7 +325,7 @@ class TaskLogger
             }
             $records[] = $record;
         }
-        usort($records, static fn(array $a, array $b): int => ($b['start'] ?? 0) <=> ($a['start'] ?? 0));
+        usort($records, static fn (array $a, array $b): int => ($b['start'] ?? 0) <=> ($a['start'] ?? 0));
         self::pruneExcessFinished($records, $cache);
     }
 
