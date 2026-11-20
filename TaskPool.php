@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace nova\plugin\task;
 
-use nova\framework\core\Logger;
-use Throwable;
-
 use function nova\framework\config;
+
+use nova\framework\core\Logger;
+
+use Throwable;
 
 /**
  * 基于 nova\plugin\task\go 的简易并发池：把 items 分块，每块一个后台任务，全部结束后回调 $finish。
@@ -18,12 +19,12 @@ class TaskPool
     public const int MAX_CONCURRENCY = 16;
 
     /**
-     * @param string        $name         任务面板展示名称
-     * @param array         $items        待处理数据
-     * @param callable      $worker       function(mixed $item, int $index): void
-     * @param callable|null $finish       function(): void
-     * @param int           $timeout      每个子任务最长运行秒数
-     * @param int           $concurrency  并发数，0 表示按 CPU 自动计算
+     * @param string        $name        任务面板展示名称
+     * @param array         $items       待处理数据
+     * @param callable      $worker      function(mixed $item, int $index): void
+     * @param callable|null $finish      function(): void
+     * @param int           $timeout     每个子任务最长运行秒数
+     * @param int           $concurrency 并发数，0 表示按 CPU 自动计算
      */
     public static function run(
         string $name,
