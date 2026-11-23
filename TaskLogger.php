@@ -84,6 +84,12 @@ class TaskLogger
             return;
         }
 
+        // 面板曾误判僵尸时，任务进程仍在写日志——拉回 running
+        if (($record['status'] ?? '') === 'failed' && self::isProcessAlive((int)($record['pid'] ?? 0))) {
+            $record['status'] = 'running';
+            $record['end'] = 0;
+        }
+
         $record['logs'][] = ['t' => self::now(), 'level' => $level, 'msg' => $msg];
         if (count($record['logs']) > self::MAX_LOGS) {
             $record['logs'] = array_slice($record['logs'], -self::MAX_LOGS);
@@ -364,8 +370,13 @@ class TaskLogger
         }
 
         $pid = (int)($record['pid'] ?? 0);
-        $alive = self::isProcessAlive($pid);
-        if ($pid > 0 && $alive === false) {
+        if ($pid > 0 && !self::isProcessAlive($pid)) {
+            // 最近还有过程日志：WorkerMan busy 时 macOS 上 posix_kill 偶发误报，别误杀
+            $last = end($record['logs']);
+            $recent = is_array($last) && isset($last['t']) && ($now - (int)$last['t']) < 120_000;
+            if ($recent) {
+                return $record;
+            }
             $record['status'] = 'failed';
             $record['end'] = $now;
             $record['logs'][] = [
@@ -413,23 +424,17 @@ class TaskLogger
             // macOS / Linux / Unix 环境
             // -------------------------
 
-            // 优先使用 POSIX 扩展（效率最高，不需要创建子进程）
-            if (function_exists('posix_kill')) {
-                $isAlive = posix_kill($pid, 0);
-                if (!$isAlive) {
-                    // 返回 1 (EPERM) 说明进程存在，只是当前用户没有权限（比如它是 root 进程）
-                    return posix_get_last_error() == 1;
-                }
+            // posix_kill(0) 优先；失败再用 ps 复核（WorkerMan 卡在 curl 时 macOS 偶发误报）
+            if (function_exists('posix_kill') && posix_kill($pid, 0)) {
                 return true;
             }
+            if (function_exists('posix_kill') && function_exists('posix_get_last_error')
+                && posix_get_last_error() === 1) {
+                return true; // EPERM：进程在，只是没权限发信号
+            }
+            exec('ps -p ' . $pid . ' -o pid= 2>/dev/null', $output);
 
-            // 如果服务器没有安装 POSIX 扩展，降级使用 ps 命令
-            // ps -p 会输出该进程的信息。2>&1 将错误输出合并
-            exec("ps -p $pid 2>&1", $output);
-
-            // ps 命令通常会输出一行表头 (如 PID TTY TIME CMD)
-            // 如果输出超过 1 行，说明找到了该进程
-            return count($output) > 1;
+            return trim(implode("\n", $output)) === (string)$pid;
         }
     }
 
